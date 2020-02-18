@@ -141,11 +141,14 @@ class SolarControl(TabbedPanel):
   heaterActive    = StringProperty()
   pumpActive      = StringProperty()
   heaterOffTemp   = StringProperty()
+  collInTempPlot  = None
   
   def __init__(self, **kwargs):
     super(SolarControl, self).__init__(**kwargs)
     db.create_connection(self,'OpenSolar')
     self.collInTemp = ''
+    self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
+    self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise
     Clock.schedule_interval(self.updateScreen, 1)
     
   def updateScreen(self, dt):
@@ -156,23 +159,19 @@ class SolarControl(TabbedPanel):
     self.heaterActive = str(db.getValue(self,'heaterActive'))
     self.pumpActive = str(db.getValue(self,'pumpActive'))
     self.heaterOffTemp = str(db.getValue(self,'heaterOffTemp'))
+    self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc")
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
     db.query(self,"UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
 
-
   def tempDown(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
     db.query(self,"UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
 
-
   def history(self):
     daySeconds = (60*60*24)
-    collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc")
-    latestTime = collInTempPlot.points[0][0]
-    print(latestTime)
+    latestTime = self.collInTempPlot.points[0][0]
     graph = Graph(xlabel="From: " + datetime.now().replace(tzinfo=pytz.timezone("Europe/London")).ctime() + 
                   '  Until: ' + time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(latestTime)),
                   ylabel='Temperature (C)',
@@ -191,7 +190,7 @@ class SolarControl(TabbedPanel):
                   background_color = (.8,.8,.8,1)
                   )
 
-    graph.add_plot(collInTempPlot)
+    graph.add_plot(self.collInTempPlot)
     return graph
 
 class TopBottom(App,BoxLayout):
@@ -199,6 +198,7 @@ class TopBottom(App,BoxLayout):
   currentTime = StringProperty(datetime.now().replace(tzinfo=pytz.timezone("Europe/London")).ctime())
   ipAddr = StringProperty()
   solarControl = SolarControl()
+  ifName = 'wlp3s0'
 
   def __init__(self, **kwargs):
     super(TopBottom, self).__init__(**kwargs)
@@ -208,10 +208,10 @@ class TopBottom(App,BoxLayout):
   def updateTime(self, dt): 
     self.currentTime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
     try:
-      ni.ifaddresses('wlp3s0')
-      self.ipAddr = ni.ifaddresses('wlp3s0')[ni.AF_INET][0]['addr']
+      ni.ifaddresses(self.ifName)
+      self.ipAddr = ni.ifaddresses(self.ifName)[ni.AF_INET][0]['addr']
     except:
-      print("error get hostname")
+      print("Error: Can't find: "+self.ifName)
 
   def build(self):
     self.title = 'OpenSolar Controller'

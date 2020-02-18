@@ -109,14 +109,14 @@ class db():
   def create_connection(self,db_file):
     """ create a database connection to a SQLite database """
     try:
-        db.conn = sqlite3.connect(db_file, isolation_level=None)
+        self.conn = sqlite3.connect(db_file, isolation_level=None)
         print(sqlite3.version)
-        self.cur = db.conn.cursor()
+        self.cur = self.conn.cursor()
     except Error as e:
         print(e)
     finally:
-        if not db.conn:
-            db.conn.close()
+        if not self.conn:
+            self.conn.close()
             print('Closing db')
           
   def __del__(self):

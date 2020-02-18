@@ -145,7 +145,7 @@ class SolarControl(TabbedPanel):
   
   def __init__(self, **kwargs):
     super(SolarControl, self).__init__(**kwargs)
-    db.create_connection(self,'OpenSolar')
+    db.create_connection(self,'OpenSolar.db')
     self.collInTemp = ''
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
     self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise

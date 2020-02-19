@@ -172,9 +172,9 @@ class SolarControl(TabbedPanel):
   def history(self):
     daySeconds = (60*60*24)
     latestTime = self.collInTempPlot.points[0][0]
-    startDateTime = datetime.now(tz=pytz.timezone("Europe/London")).ctime()
-    endDateTime = (startDateTime + timedelta(days=-1)).ctime()
-    graph = Graph(xlabel="From: " + startDateTime + "Until: " + endDateTime,
+    startDateTime = datetime.now(tz=pytz.timezone("Europe/London"))
+    endDateTime = startDateTime + timedelta(days=-1)
+    graph = Graph(xlabel="From: " + startDateTime.ctime() + " Until: " + endDateTime.ctime(),
                   ylabel='Temperature (C)',
                   #x_ticks_minor=1,
                   x_ticks_major=daySeconds,

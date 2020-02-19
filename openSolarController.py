@@ -7,7 +7,7 @@ from kivy.properties import StringProperty
 from kivy.clock import Clock
 import sqlite3
 from sqlite3 import Error
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import pytz
 import time
 
@@ -172,8 +172,9 @@ class SolarControl(TabbedPanel):
   def history(self):
     daySeconds = (60*60*24)
     latestTime = self.collInTempPlot.points[0][0]
-    graph = Graph(xlabel="From: " + datetime.now().replace(tzinfo=pytz.timezone("Europe/London")).ctime() + 
-                  '  Until: ' + time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.localtime(latestTime)),
+    startDateTime = datetime.now(tz=pytz.timezone("Europe/London")).ctime()
+    endDateTime = (startDateTime + timedelta(days=-1)).ctime()
+    graph = Graph(xlabel="From: " + startDateTime + "Until: " + endDateTime,
                   ylabel='Temperature (C)',
                   #x_ticks_minor=1,
                   x_ticks_major=daySeconds,
@@ -195,7 +196,7 @@ class SolarControl(TabbedPanel):
 
 class TopBottom(App,BoxLayout):
   time = StringProperty()
-  currentTime = StringProperty(datetime.now().replace(tzinfo=pytz.timezone("Europe/London")).ctime())
+  currentTime = StringProperty(datetime.now(tz=pytz.timezone("Europe/London")).ctime())
   ipAddr = StringProperty()
   solarControl = SolarControl()
   ifName = 'wlp3s0'

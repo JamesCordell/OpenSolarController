@@ -142,14 +142,20 @@ class SolarControl(TabbedPanel):
   pumpActive      = StringProperty()
   heaterOffTemp   = StringProperty()
   collInTempPlot  = None
+  collOutTempPlot  = None
+  graph           = Graph()
+  zoom            = int
   
   def __init__(self, **kwargs):
     super(SolarControl, self).__init__(**kwargs)
     db.create_connection(self,'OpenSolar.db')
     self.collInTemp = ''
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise
+    self.collInTempPlot.points  = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise
+    self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
+    self.collOutTempPlot.points = db.query(self,"select time,value from log where itemId=2 order by time desc") #initalise
     Clock.schedule_interval(self.updateScreen, 1)
+    self.graphXSeconds = 60*60
     
   def updateScreen(self, dt):
     self.collInTemp = str(db.getValue(self,'collInTemp'))
@@ -159,7 +165,19 @@ class SolarControl(TabbedPanel):
     self.heaterActive = str(db.getValue(self,'heaterActive'))
     self.pumpActive = str(db.getValue(self,'pumpActive'))
     self.heaterOffTemp = str(db.getValue(self,'heaterOffTemp'))
+    latestTime = self.collInTempPlot.points[0][0]
+    #latestTime = self.collOutTempPlot.points[0][0]
+    startDateTime = datetime.now(tz=pytz.timezone("Europe/London"))
+    endDateTime = startDateTime + timedelta(days=-1)
+    self.graph.xlabel = "From: " + startDateTime.ctime() + "           Until: " + endDateTime.ctime()
+
+    self.graph.xmin = (latestTime - self.graphXSeconds)
+    self.graph.xmax = latestTime
+    
     self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc")
+    self.collOutTempPlot.points = db.query(self,"select time,value from log where itemId=2 order by time desc")
+    self.graph.add_plot(self.collInTempPlot)
+    self.graph.add_plot(self.collOutTempPlot)
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
@@ -170,29 +188,28 @@ class SolarControl(TabbedPanel):
     db.query(self,"UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
 
   def history(self):
-    daySeconds = (60*60*24)
     latestTime = self.collInTempPlot.points[0][0]
     startDateTime = datetime.now(tz=pytz.timezone("Europe/London"))
     endDateTime = startDateTime + timedelta(days=-1)
-    graph = Graph(xlabel="From: " + startDateTime.ctime() + " Until: " + endDateTime.ctime(),
+    self.graph = Graph(xlabel="From: " + startDateTime.ctime() + "           Until: " + endDateTime.ctime(),
                   ylabel='Temperature (C)',
                   #x_ticks_minor=1,
-                  x_ticks_major=daySeconds,
+                  x_ticks_major=self.graphXSeconds,
                   y_ticks_major=10,
                   x_grid_label=True,
                   y_grid_label=True,
                   padding=5,
                   x_grid=True,
                   y_grid=True,
-                  xmin=latestTime - daySeconds,
+                  xmin=latestTime - self.graphXSeconds,
                   xmax=latestTime,
                   ymin=-10,
                   ymax=120,
                   background_color = (.8,.8,.8,1)
                   )
 
-    graph.add_plot(self.collInTempPlot)
-    return graph
+    self.graph.add_plot(self.collInTempPlot)
+    return self.graph
 
 class TopBottom(App,BoxLayout):
   time = StringProperty()

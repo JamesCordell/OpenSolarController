@@ -79,10 +79,21 @@ Builder.load_string("""
               text: 'down'
               on_release: root.solarControl.tempDown()
     TabbedPanelItem:
-      id: history
       text: 'History'
-      Graph:
-        id: graph
+      BoxLayout:
+        size_hint: 1.9  , 1
+        id: history
+        BoxLayout:
+          orientation: 'vertical'
+          Button:
+            size_hint:  .05, .05 
+            text: '+'
+            on_release: root.solarControl.zoomIn()
+          Button:
+            size_hint:  .05, .05
+            text: '-'
+            on_release: root.solarControl.zoomOut()
+
 
     TabbedPanelItem:
       id: setup
@@ -145,6 +156,9 @@ class SolarControl(TabbedPanel):
   collOutTempPlot  = None
   graph           = Graph()
   zoom            = int
+  endDateTime     = datetime.now(tz=pytz.timezone("Europe/London"))
+  startDateTime   = None
+  
   
   def __init__(self, **kwargs):
     super(SolarControl, self).__init__(**kwargs)
@@ -154,8 +168,9 @@ class SolarControl(TabbedPanel):
     self.collInTempPlot.points  = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
     self.collOutTempPlot.points = db.query(self,"select time,value from log where itemId=2 order by time desc") #initalise
-    Clock.schedule_interval(self.updateScreen, 1)
     self.graphXSeconds = 60*60
+    self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
+    Clock.schedule_interval(self.updateScreen, 1)
     
   def updateScreen(self, dt):
     self.collInTemp = str(db.getValue(self,'collInTemp'))
@@ -167,9 +182,9 @@ class SolarControl(TabbedPanel):
     self.heaterOffTemp = str(db.getValue(self,'heaterOffTemp'))
     latestTime = self.collInTempPlot.points[0][0]
     #latestTime = self.collOutTempPlot.points[0][0]
-    startDateTime = datetime.now(tz=pytz.timezone("Europe/London"))
-    endDateTime = startDateTime + timedelta(days=-1)
-    self.graph.xlabel = "From: " + startDateTime.ctime() + "           Until: " + endDateTime.ctime()
+    self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
+    
+    self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
 
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
@@ -186,12 +201,17 @@ class SolarControl(TabbedPanel):
   def tempDown(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
     db.query(self,"UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
+    
+  def zoomIn(self):
+    if self.graphXSeconds != 60*60: #  No lower than 1 hour
+      self.graphXSeconds -= 60*60
+    
+  def zoomOut(self):
+    self.graphXSeconds += 60*60
 
   def history(self):
     latestTime = self.collInTempPlot.points[0][0]
-    startDateTime = datetime.now(tz=pytz.timezone("Europe/London"))
-    endDateTime = startDateTime + timedelta(days=-1)
-    self.graph = Graph(xlabel="From: " + startDateTime.ctime() + "           Until: " + endDateTime.ctime(),
+    self.graph = Graph(xlabel="From: " + self.startDateTime.ctime() + "                  Until: " + self.endDateTime.ctime(),
                   ylabel='Temperature (C)',
                   #x_ticks_minor=1,
                   x_ticks_major=self.graphXSeconds,
@@ -221,7 +241,7 @@ class TopBottom(App,BoxLayout):
   def __init__(self, **kwargs):
     super(TopBottom, self).__init__(**kwargs)
     Clock.schedule_interval(self.updateTime, 1)
-    self.ids.history.add_widget(self.solarControl.history())
+    self.ids.history.add_widget(self.solarControl.history(),index=1)  #index=1 add graph before zoom buttons 
 
   def updateTime(self, dt): 
     self.currentTime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")

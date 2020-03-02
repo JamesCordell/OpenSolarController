@@ -10,8 +10,9 @@ import json
 import sys
 from statistics import mean 
 
-arduinoSerialDev = '/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0'
-dbFile = 'OpenSolar.db'
+import settings
+
+from solarDb import Db
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -36,38 +37,9 @@ def eprint(*args, **kwargs):
 	#value INTEGER
 #);
 
-class Db:
-  conn = None
-  cur = None
-  def __init__(self,db_file):
-    """ create a database connection to a SQLite database """
-    try:
-      self.conn = sqlite3.connect(db_file, isolation_level=None)
-      self.cur = self.conn.cursor()
-    except Error as e:
-      eprint(e)
-    finally:
-      if not self.conn:
-        self.conn.close()
-        eprint('Closing db')
-
-  def __del__(self):
-    self.conn.commit()
-    self.cur.close()
-    self.conn.close()
-
-  def query(self,q):
-    self.cur.execute(q)
-    
-  def logINSERT(self,itemId,value):
-    self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
-   
-  def statusUPDATE(self,itemName,value):
-    self.query('UPDATE status SET value=' + value + ' WHERE "key"="' + itemName + '"')
-
 if __name__ == '__main__':
-    db = Db(dbFile)
-    dev = serial.Serial(arduinoSerialDev,
+    db = Db(settings.dbFile)
+    dev = serial.Serial(settings.arduinoSerialDev,
     baudrate=115200,
     bytesize=serial.EIGHTBITS,
     parity=serial.PARITY_EVEN,

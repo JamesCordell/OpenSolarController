@@ -5,19 +5,20 @@ from kivy.lang import Builder
 from kivy.uix.widget import Widget
 from kivy.properties import StringProperty
 from kivy.clock import Clock
-import sqlite3
-from sqlite3 import Error
+
 from datetime import datetime, timezone, timedelta
 import pytz
 import time
 
 import netifaces as ni
 
-from math import sin
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.properties import ObjectProperty  
 from kivy.app import App    
 from kivy.uix.widget import Widget  
+
+import settings
+from solarDb import Db
 
 Builder.load_string("""
 
@@ -114,34 +115,7 @@ Builder.load_string("""
 
 """)
 
-class db():
-  conn = None
-  cur = None
-  def create_connection(self,db_file):
-    """ create a database connection to a SQLite database """
-    try:
-        self.conn = sqlite3.connect(db_file, isolation_level=None)
-        print(sqlite3.version)
-        self.cur = self.conn.cursor()
-    except Error as e:
-        print(e)
-    finally:
-        if not self.conn:
-            self.conn.close()
-            print('Closing db')
-          
-  def __del__(self):
-    self.conn.commit()
-    self.cur.close()
-    self.conn.close()
 
-  def getValue(self,q):
-    self.cur.execute("SELECT value FROM status WHERE key='" + q + "'")
-    return self.cur.fetchone()[0]
-
-  def query(self,q):
-    self.cur.execute(q)
-    return self.cur.fetchmany(24 * 60 * 60)
 
 class SolarControl(TabbedPanel):
   
@@ -154,53 +128,55 @@ class SolarControl(TabbedPanel):
   heaterOffTemp   = StringProperty()
   collInTempPlot  = None
   collOutTempPlot  = None
+  
   graph           = Graph()
   zoom            = int
-  endDateTime     = datetime.now(tz=pytz.timezone("Europe/London"))
+  endDateTime     = datetime.now(tz=pytz.timezone(settings.timeZone))
   startDateTime   = None
+  db              = None
   
   
   def __init__(self, **kwargs):
     super(SolarControl, self).__init__(**kwargs)
-    db.create_connection(self,'OpenSolar.db')
+    self.db = Db(settings.dbFile)
     self.collInTemp = ''
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    self.collInTempPlot.points  = db.query(self,"select time,value from log where itemId=1 order by time desc") #initalise
+    self.collInTempPlot.points  = self.db.query("select time,value from log where itemId=1 order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
-    self.collOutTempPlot.points = db.query(self,"select time,value from log where itemId=2 order by time desc") #initalise
+    self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc") #initalise
     self.graphXSeconds = 60*60
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     Clock.schedule_interval(self.updateScreen, 1)
     
   def updateScreen(self, dt):
-    self.collInTemp = str(db.getValue(self,'collInTemp'))
-    self.collOutTemp = str(db.getValue(self,'collOutTemp'))
-    self.tankTopTemp = str(db.getValue(self,'tankTopTemp'))
-    self.tankBottomTemp = str(db.getValue(self,'tankBottomTemp'))
-    self.heaterActive = str(db.getValue(self,'heaterActive'))
-    self.pumpActive = str(db.getValue(self,'pumpActive'))
-    self.heaterOffTemp = str(db.getValue(self,'heaterOffTemp'))
+    self.collInTemp = self.db.getValue('collInTemp')
+    self.collOutTemp = self.db.getValue('collOutTemp')
+    self.tankTopTemp = self.db.getValue('tankTopTemp')
+    self.tankBottomTemp = self.db.getValue('tankBottomTemp')
+    self.heaterActive = self.db.getValue('heaterActive')
+    self.pumpActive = self.db.getValue('pumpActive')
+    self.heaterOffTemp = self.db.getValue('heaterOffTemp')
     latestTime = self.collInTempPlot.points[0][0]
-    #latestTime = self.collOutTempPlot.points[0][0]
+
+    self.endDateTime = datetime.now(tz=pytz.timezone(settings.timeZone))
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     
     self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
-
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
     
-    self.collInTempPlot.points = db.query(self,"select time,value from log where itemId=1 order by time desc")
-    self.collOutTempPlot.points = db.query(self,"select time,value from log where itemId=2 order by time desc")
+    self.collInTempPlot.points = self.db.query("select time,value from log where itemId=1 order by time desc")
+    self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc")
     self.graph.add_plot(self.collInTempPlot)
     self.graph.add_plot(self.collOutTempPlot)
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
-    db.query(self,"UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
+    self.db.query("UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
 
   def tempDown(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
-    db.query(self,"UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
+    self.db.query("UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
     
   def zoomIn(self):
     if self.graphXSeconds != 60*60: #  No lower than 1 hour
@@ -232,8 +208,7 @@ class SolarControl(TabbedPanel):
     return self.graph
 
 class TopBottom(App,BoxLayout):
-  time = StringProperty()
-  currentTime = StringProperty(datetime.now(tz=pytz.timezone("Europe/London")).ctime())
+  currentTime = StringProperty(datetime.now(tz=pytz.timezone(settings.timeZone)).ctime())
   ipAddr = StringProperty()
   solarControl = SolarControl()
   ifName = 'wlp3s0'

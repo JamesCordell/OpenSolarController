@@ -24,8 +24,7 @@ Builder.load_string("""
 
 <TopBottom>:
   orientation: 'vertical'
-  SolarControl:
-    id: solarControl
+  Status:
     size_hint: 1, .9
     pos_hint: {'center_x': .5, 'center_y': .55}
     do_default_tab: False
@@ -38,47 +37,41 @@ Builder.load_string("""
         Label:
           text: 'Collector in Temp'
         Label:
-          text:  root.solarControl.collInTemp
-            
+          text:  root.Status.collInTemp
         Label:
           text: 'Collector out Temp'
         Label:
-          text: root.solarControl.collOutTemp
-            
+          text: root.Status.collOutTemp
         Label:
           text: 'Tank Top Temp'
         Label:
-          text: root.solarControl.tankTopTemp
-            
+          text: root.Status.tankTopTemp
         Label:
           text: 'Tank Bottom Temp'
         Label:
-          text: root.solarControl.tankBottomTemp
-            
+          text: root.Status.tankBottomTemp
         Label:
           text: 'Heater Active'
         Label:
-          text: root.solarControl.heaterActive
-
+          text: root.Status.heaterActive
         Label:
           text: 'Pump Active'
         Label:
-          text: root.solarControl.pumpActive
-
+          text: root.Status.pumpActive
         Label:
           text: 'Heater off temp'
         GridLayout:
           cols: 2
           Label:
-            text: root.solarControl.heaterOffTemp
+            text: root.Status.heaterOffTemp
           BoxLayout:
             orientation: 'vertical'
             Button:
               text: 'up'
-              on_release: root.solarControl.tempUp()
+              on_release: root.Status.tempUp()
             Button:
               text: 'down'
-              on_release: root.solarControl.tempDown()
+              on_release: root.Status.tempDown()
     TabbedPanelItem:
       text: 'History'
       BoxLayout:
@@ -89,12 +82,11 @@ Builder.load_string("""
           Button:
             size_hint:  .05, .05 
             text: '+'
-            on_release: root.solarControl.zoomIn()
+            on_release: root.History.zoomIn()
           Button:
             size_hint:  .05, .05
             text: '-'
-            on_release: root.solarControl.zoomOut()
-
+            on_release: root.History.zoomOut()
 
     TabbedPanelItem:
       id: setup
@@ -114,76 +106,43 @@ Builder.load_string("""
       text: 'IP Address:' + root.ipAddr
 
 """)
+class History(TabbedPanel):
 
-
-
-class SolarControl(TabbedPanel):
-  
-  collInTemp      = StringProperty()
-  collOutTemp     = StringProperty()
-  tankTopTemp     = StringProperty()
-  tankBottomTemp  = StringProperty()
-  heaterActive    = StringProperty()
-  pumpActive      = StringProperty()
-  heaterOffTemp   = StringProperty()
-  collInTempPlot  = None
-  collOutTempPlot  = None
-  
+  db              = None
   graph           = Graph()
   zoom            = int
   endDateTime     = datetime.now(tz=pytz.timezone(settings.timeZone))
   startDateTime   = None
-  db              = None
-  
   
   def __init__(self, **kwargs):
-    super(SolarControl, self).__init__(**kwargs)
+    super(History, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
-    self.collInTemp = ''
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
     self.collInTempPlot.points  = self.db.query("select time,value from log where itemId=1 order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
     self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc") #initalise
-    self.graphXSeconds = 60*60
+    self.graphXSeconds = 3600  #  Default graph zoom
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     Clock.schedule_interval(self.updateScreen, 1)
-    
-  def updateScreen(self, dt):
-    self.collInTemp = self.db.getValue('collInTemp')
-    self.collOutTemp = self.db.getValue('collOutTemp')
-    self.tankTopTemp = self.db.getValue('tankTopTemp')
-    self.tankBottomTemp = self.db.getValue('tankBottomTemp')
-    self.heaterActive = self.db.getValue('heaterActive')
-    self.pumpActive = self.db.getValue('pumpActive')
-    self.heaterOffTemp = self.db.getValue('heaterOffTemp')
-    latestTime = self.collInTempPlot.points[0][0]
 
+  def updateScreen(self, dt):
+    latestTime = self.collInTempPlot.points[0][0]
     self.endDateTime = datetime.now(tz=pytz.timezone(settings.timeZone))
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
-    
     self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
-    
     self.collInTempPlot.points = self.db.query("select time,value from log where itemId=1 order by time desc")
     self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc")
     self.graph.add_plot(self.collInTempPlot)
     self.graph.add_plot(self.collOutTempPlot)
 
-  def tempUp(self):
-    self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
-    self.db.query("UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
-
-  def tempDown(self):
-    self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
-    self.db.query("UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
-    
   def zoomIn(self):
-    if self.graphXSeconds != 60*60: #  No lower than 1 hour
-      self.graphXSeconds -= 60*60
-    
+    if self.graphXSeconds != 3600: #  No lower than 1 hour
+      self.graphXSeconds -= 3600
+
   def zoomOut(self):
-    self.graphXSeconds += 60*60
+    self.graphXSeconds += 3600
 
   def history(self):
     latestTime = self.collInTempPlot.points[0][0]
@@ -203,34 +162,70 @@ class SolarControl(TabbedPanel):
                   ymax=120,
                   background_color = (.8,.8,.8,1)
                   )
-
     self.graph.add_plot(self.collInTempPlot)
     return self.graph
+
+class Status(TabbedPanel):
+
+  collInTemp      = StringProperty()
+  collOutTemp     = StringProperty()
+  tankTopTemp     = StringProperty()
+  tankBottomTemp  = StringProperty()
+  heaterActive    = StringProperty()
+  pumpActive      = StringProperty()
+  heaterOffTemp   = StringProperty()
+  collInTempPlot  = None
+  collOutTempPlot = None
+
+  db              = None
+
+  def __init__(self, **kwargs):
+    super(Status, self).__init__(**kwargs)
+    self.db = Db(settings.dbFile)
+    self.collInTemp = ''
+    self.heaterOffTemp = self.db.getValue('heaterOffTemp')
+    Clock.schedule_interval(self.updateScreen, 1)
+
+  def updateScreen(self, dt):
+    self.collInTemp = self.db.getValue('collInTemp')
+    self.collOutTemp = self.db.getValue('collOutTemp')
+    self.tankTopTemp = self.db.getValue('tankTopTemp')
+    self.tankBottomTemp = self.db.getValue('tankBottomTemp')
+    self.heaterActive = self.db.getValue('heaterActive')
+    self.pumpActive = self.db.getValue('pumpActive')
+
+  def tempUp(self):
+    self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
+    self.db.query("UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
+
+  def tempDown(self):
+    self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
+    self.db.query("UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
+
 
 class TopBottom(App,BoxLayout):
   currentTime = StringProperty(datetime.now(tz=pytz.timezone(settings.timeZone)).ctime())
   ipAddr = StringProperty()
-  solarControl = SolarControl()
-  ifName = 'wlp3s0'
+  Status = Status()
+  History = History()
 
   def __init__(self, **kwargs):
     super(TopBottom, self).__init__(**kwargs)
     Clock.schedule_interval(self.updateTime, 1)
-    self.ids.history.add_widget(self.solarControl.history(),index=1)  #index=1 add graph before zoom buttons 
+    self.ids.history.add_widget(self.History.history(),index=1)  #index=1 add graph before zoom buttons 
 
   def updateTime(self, dt): 
     self.currentTime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
     try:
-      ni.ifaddresses(self.ifName)
-      self.ipAddr = ni.ifaddresses(self.ifName)[ni.AF_INET][0]['addr']
+      ni.ifaddresses(settings.ifName)
+      self.ipAddr = ni.ifaddresses(settings.ifName)[ni.AF_INET][0]['addr']
     except:
-      print("Error: Can't find: "+self.ifName)
+      print("Error: Can't find: " + settings.ifName)
 
   def build(self):
     self.title = 'OpenSolar Controller'
     return self
-   
-   
+
 if __name__ == '__main__':
     solarControlApp = TopBottom()
     solarControlApp.run()

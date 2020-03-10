@@ -28,7 +28,7 @@ class Db:
     self.cur.execute(q)
     return self.cur.fetchmany(24 * 60 * 60)
 
-  def logINSERT(self,itemId,value):
+  def logINSERT(self,itemId,value): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
     self.cur.execute('SELECT value,time FROM log WHERE itemId=' + str(itemId) + ' order by time desc')
     valueDb = float(self.cur.fetchone()[0])
     epoch = int(self.cur.fetchone()[1])

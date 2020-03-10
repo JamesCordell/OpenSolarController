@@ -14,7 +14,7 @@ import netifaces as ni
 
 from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.properties import ObjectProperty  
-from kivy.app import App    
+from kivy.app import App  
 from kivy.uix.widget import Widget  
 
 import settings
@@ -22,7 +22,7 @@ from solarDb import Db
 
 Builder.load_string("""
 
-<TopBottom>:
+<OpenSolarController>:
   orientation: 'vertical'
   Status:
     size_hint: 1, .9
@@ -105,7 +105,9 @@ Builder.load_string("""
     Label:
       text: 'IP Address:' + root.ipAddr
 
+
 """)
+
 class History(TabbedPanel):
 
   db              = None
@@ -203,14 +205,14 @@ class Status(TabbedPanel):
     self.db.query("UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
 
 
-class TopBottom(App,BoxLayout):
+class OpenSolarController(App,BoxLayout):
   currentTime = StringProperty(datetime.now(tz=pytz.timezone(settings.timeZone)).ctime())
   ipAddr = StringProperty()
   Status = Status()
   History = History()
 
   def __init__(self, **kwargs):
-    super(TopBottom, self).__init__(**kwargs)
+    super(OpenSolarController, self).__init__(**kwargs)
     Clock.schedule_interval(self.updateTime, 1)
     self.ids.history.add_widget(self.History.history(),index=1)  #index=1 add graph before zoom buttons 
 
@@ -223,9 +225,8 @@ class TopBottom(App,BoxLayout):
       print("Error: Can't find: " + settings.ifName)
 
   def build(self):
-    self.title = 'OpenSolar Controller'
+    self.title = 'Open Solar Controller'
     return self
 
 if __name__ == '__main__':
-    solarControlApp = TopBottom()
-    solarControlApp.run()
+    OpenSolarController().run()

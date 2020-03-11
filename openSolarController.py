@@ -20,93 +20,93 @@ from kivy.uix.widget import Widget
 import settings
 from solarDb import Db
 
-Builder.load_string("""
+Builder.load_file('./opensolarcontrollerUX.kv')
+#Builder.load_string("""
 
-<OpenSolarController>:
-  orientation: 'vertical'
-  Status:
-    size_hint: 1, .9
-    pos_hint: {'center_x': .5, 'center_y': .55}
-    do_default_tab: False
-    TabbedPanelItem:
-      id: status
-      text: 'Status'
-      GridLayout:
-        id: gridLayoutTabbedPanelItem
-        cols: 2
-        Label:
-          text: 'Collector in Temp'
-        Label:
-          text:  root.Status.collInTemp
-        Label:
-          text: 'Collector out Temp'
-        Label:
-          text: root.Status.collOutTemp
-        Label:
-          text: 'Tank Top Temp'
-        Label:
-          text: root.Status.tankTopTemp
-        Label:
-          text: 'Tank Bottom Temp'
-        Label:
-          text: root.Status.tankBottomTemp
-        Label:
-          text: 'Heater Active'
-        Label:
-          text: root.Status.heaterActive
-        Label:
-          text: 'Pump Active'
-        Label:
-          text: root.Status.pumpActive
-        Label:
-          text: 'Heater off temp'
-        GridLayout:
-          cols: 2
-          Label:
-            text: root.Status.heaterOffTemp
-          BoxLayout:
-            orientation: 'vertical'
-            Button:
-              text: 'up'
-              on_release: root.Status.tempUp()
-            Button:
-              text: 'down'
-              on_release: root.Status.tempDown()
-    TabbedPanelItem:
-      text: 'History'
-      BoxLayout:
-        size_hint: 1.9  , 1
-        id: history
-        BoxLayout:
-          orientation: 'vertical'
-          Button:
-            size_hint:  .05, .05 
-            text: '+'
-            on_release: root.History.zoomIn()
-          Button:
-            size_hint:  .05, .05
-            text: '-'
-            on_release: root.History.zoomOut()
+#<OpenSolarController>:
+  #orientation: 'vertical'
+  #Status:
+    #size_hint: 1, .9
+    #pos_hint: {'center_x': .5, 'center_y': .55}
+    #do_default_tab: False
+    #TabbedPanelItem:
+      #id: status
+      #text: 'Status'
+      #GridLayout:
+        #id: gridLayoutTabbedPanelItem
+        #cols: 2
+        #Label:
+          #text: 'Collector in Temp'
+        #Label:
+          #text:  root.Status.collInTemp
+        #Label:
+          #text: 'Collector out Temp'
+        #Label:
+          #text: root.Status.collOutTemp
+        #Label:
+          #text: 'Tank Top Temp'
+        #Label:
+          #text: root.Status.tankTopTemp
+        #Label:
+          #text: 'Tank Bottom Temp'
+        #Label:
+          #text: root.Status.tankBottomTemp
+        #Label:
+          #text: 'Heater Active'
+        #Label:
+          #text: root.Status.heaterActive
+        #Label:
+          #text: 'Pump Active'
+        #Label:
+          #text: root.Status.pumpActive
+        #Label:
+          #text: 'Heater off temp'
+        #GridLayout:
+          #cols: 2
+          #Label:
+            #text: root.Status.heaterOffTemp
+          #BoxLayout:
+            #orientation: 'vertical'
+            #Button:
+              #text: 'up'
+              #on_release: root.Status.tempUp()
+            #Button:
+              #text: 'down'
+              #on_release: root.Status.tempDown()
+    #TabbedPanelItem:
+      #text: 'History'
+      #BoxLayout:
+        #size_hint: 1.9  , 1
+        #id: history
+        #BoxLayout:
+          #orientation: 'vertical'
+          #Button:
+            #size_hint:  .05, .05 
+            #text: '+'
+            #on_release: root.History.zoomIn()
+          #Button:
+            #size_hint:  .05, .05
+            #text: '-'
+            #on_release: root.History.zoomOut()
 
-    TabbedPanelItem:
-      id: setup
-      text: 'Setup'
-      RstDocument:
-        text:'\\n'.join(("This is the Open Solar Solar Controller written by James Cordell in python3","You are in the third tab."))
-  GridLayout:
-    id: gridTopBottom
-    cols: 3
-    size_hint: 1, .05
-    font_size: '15sp'
-    Label:
-      text: root.currentTime
-    Label:
-      text: 
-    Label:
-      text: 'IP Address:' + root.ipAddr
+    #TabbedPanelItem:
+      #id: setup
+      #text: 'Setup'
+      #RstDocument:
+        #text:'\\n'.join(("This is the Open Solar Solar Controller written by James Cordell in python3","You are in the third tab."))
+  #GridLayout:
+    #id: gridTopBottom
+    #cols: 3
+    #size_hint: 1, .05
+    #font_size: '15sp'
+    #Label:
+      #text: root.currentTime
+    #Label:
+      #text: 
+    #Label:
+      #text: 'IP Address:' + root.ipAddr
 
-
-""")
+#""")
 
 class History(TabbedPanel):
 
@@ -207,15 +207,15 @@ class Status(TabbedPanel):
 
 class OpenSolarController(App,BoxLayout):
   currentTime = StringProperty(datetime.now(tz=pytz.timezone(settings.timeZone)).ctime())
-  ipAddr = StringProperty()
   Status = Status()
   History = History()
+  ipAddr = StringProperty()
 
   def __init__(self, **kwargs):
     super(OpenSolarController, self).__init__(**kwargs)
     Clock.schedule_interval(self.updateTime, 1)
-    self.ids.history.add_widget(self.History.history(),index=1)  #index=1 add graph before zoom buttons 
-
+    self.ids.history.add_widget(self.History.history(),index=1)  #index=1 add graph before zoom buttons
+     
   def updateTime(self, dt): 
     self.currentTime = datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
     try:
@@ -226,7 +226,7 @@ class OpenSolarController(App,BoxLayout):
 
   def build(self):
     self.title = 'Open Solar Controller'
-    return self
+    return OpenSolarController()
 
 if __name__ == '__main__':
     OpenSolarController().run()

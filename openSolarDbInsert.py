@@ -27,7 +27,6 @@ try:
 except KernelModuleLoadError as e:
   eprint("Error: " + e)
 
-
 def truncate(x):
   return float(int(x * 10) / 10)
 
@@ -41,7 +40,7 @@ def getDS18b20(sensorsData):
       except SensorNotReadyError or NoSensorFoundError:
         pass
     try:
-      sensorsData[ tX[s.id] ] = str(truncate(statistics.mean(avgTemp))) #  Translate DS18b20 to tX for simplicity
+      sensorsData[ tX[s.id] ] = truncate(statistics.mean(avgTemp)) #  Translate DS18b20 to tX for simplicity
     except statistics.StatisticsError:
       pass
     time.sleep(1)
@@ -52,8 +51,8 @@ def getMAX(sensorsData):
   if jsonStr: #  is string not empty
     try:
       temp = json.loads(jsonStr)
-      sensorsData["t1"] = temp["t1"]
-      sensorsData["t2"] = temp["t2"]
+      sensorsData["t1"] = float(temp["t1"])
+      sensorsData["t2"] = float(temp["t2"])
     except:
       eprint("Error: " + str(sys.exc_info()[0]))
 
@@ -72,7 +71,13 @@ if __name__ == '__main__':
     while True:
       sensorsData = dict()
       getDS18b20(sensorsData)
-      getMAX(sensorsData)
+      #getMAX(sensorsData)
+      print( sensorsData )
+      try:
+        db.logINSERT(4,sensorsData["t4"])
+        db.statusUPDATE('tankBottomTemp',sensorsData["t4"])
+      except:
+        pass
       if len(sensorsData) >= 4:
         print( sensorsData )
         db.logINSERT(1,sensorsData["t1"])

@@ -8,61 +8,79 @@ import serial
 import binascii
 import json
 import sys
-from statistics import mean 
-
-import settings
+import serial
+import statistics
+from w1thermsensor import W1ThermSensor, SensorNotReadyError, NoSensorFoundError
+import settings  #User defined
 
 from solarDb import Db
+
+tX = dict()
+tX[settings.tankBottomTempDSID] = "t3"
+tX[settings.tankTopTempDSID] = "t4"
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-#from w1thermsensor import W1ThermSensor
-#try:
-#  sensor = W1ThermSensor()
-#except KernelModuleLoadError as e:
-#  print(e)
-
-#CREATE TABLE log (
-	#time INTEGER DEFAULT 0 NOT NULL,
-	#itemId INTEGER DEFAULT 0 NOT NULL,
-	#value NUMERIC DEFAULT 0 NOT NULL
-#);
-
-#CREATE INDEX log_time_IDX ON log (time,itemId);
+try:
+  sensor = W1ThermSensor()
+except KernelModuleLoadError as e:
+  eprint("Error: " + e)
 
 
-#CREATE TABLE status (
-	#"key" TEXT(255),
-	#value INTEGER
-#);
+def truncate(x):
+  return float(int(x * 10) / 10)
+
+def getDS18b20(sensorsData):
+  for s in W1ThermSensor.get_available_sensors():
+    avgTemp=[]
+    for i in range(3):
+      try:
+        avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,s.id).get_temperature())
+        time.sleep(1)
+      except SensorNotReadyError or NoSensorFoundError:
+        pass
+    try:
+      sensorsData[ tX[s.id] ] = str(truncate(statistics.mean(avgTemp))) #  Translate DS18b20 to tX for simplicity
+    except statistics.StatisticsError:
+      pass
+    time.sleep(1)
+
+def getMAX(sensorsData):
+  dev.write(b'\n') #  arduino code expects a carrier return to initiate sending 1 packet of data.
+  jsonStr = dev.readline().decode("utf-8")  #  decode two bytes and remove \n
+  if jsonStr: #  is string not empty
+    try:
+      temp = json.loads(jsonStr)
+      sensorsData["t1"] = temp["t1"]
+      sensorsData["t2"] = temp["t2"]
+    except:
+      eprint("Error: " + str(sys.exc_info()[0]))
 
 if __name__ == '__main__':
     db = Db(settings.dbFile)
-    dev = serial.Serial(settings.arduinoSerialDev,
-    baudrate=115200,
-    bytesize=serial.EIGHTBITS,
-    parity=serial.PARITY_EVEN,
-    stopbits=serial.STOPBITS_ONE,
-    timeout=1)
+    try:
+      dev = serial.Serial(settings.arduinoSerialDev,
+      baudrate=115200,
+      bytesize=serial.EIGHTBITS,
+      parity=serial.PARITY_EVEN,
+      stopbits=serial.STOPBITS_ONE,
+      timeout=1)
+    except:
+      pass
 
     while True:
-      dev.write(b'\n') #  arduino code expects a carrier return to initiate sending 1 packet of data.
-      temperature = dict()
-      jsonStr = dev.readline().decode("utf-8")  #  decode two bytes and remove \n
-      if jsonStr: #  is string not empty
-        try:
-          temperature = json.loads(jsonStr)
-        except:
-          eprint("Error: " + str(sys.exc_info()[0]))
-
-      #temp[0] = sensor.get_temperature()
-      #temp[1] = sensor.get_temperature()
-      #temp[2] = sensor.get_temperature()
-      #avgTemp = (sensor.get_temperature() + sensor.get_temperature() + sensor.get_temperature()) / 3
-      #print("INSERT INTO log (time,itemId,value) VALUES ("+str(time.time())+",1,"+avgTemp+")")
-        db.logINSERT(1,temperature["t1"])
-        db.statusUPDATE('collInTemp',temperature["t1"])
-        db.logINSERT(2,temperature["t2"])
-        db.statusUPDATE('collOutTemp',temperature["t2"])
+      sensorsData = dict()
+      getDS18b20(sensorsData)
+      getMAX(sensorsData)
+      if len(sensorsData) >= 4:
+        print( sensorsData )
+        db.logINSERT(1,sensorsData["t1"])
+        db.statusUPDATE('collInTemp',sensorsData["t1"])
+        db.logINSERT(2,sensorsData["t2"])
+        db.statusUPDATE('collOutTemp',sensorsData["t2"])
+        db.logINSERT(3,sensorsData["t3"])
+        db.statusUPDATE('tankBottomTemp',sensorsData["t3"])
+        db.logINSERT(4,sensorsData["t4"])
+        db.statusUPDATE('tankTopTemp',sensorsData["t4"]) 
       time.sleep(1)

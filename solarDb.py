@@ -1,6 +1,7 @@
 
 import sqlite3
 from sqlite3 import Error
+import mysql.connector
 import time
 
 class Db:
@@ -10,10 +11,11 @@ class Db:
   def __init__(self,db_file):
     """ create a database connection to a SQLite database """
     try:
-      self.conn = sqlite3.connect(db_file, isolation_level=None)
+      #self.conn = sqlite3.connect(db_file, isolation_level=None)
+      self.conn = mysql.connector.connect(user='openSolar',password='opensolar', database='OpenSolar',host='localhost',buffered=True)
       self.cur = self.conn.cursor()
     except Error as e:
-      eprint(e)
+      print(e)
     finally:
       if not self.conn:
         self.conn.close()
@@ -39,11 +41,13 @@ class Db:
         self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
     except TypeError:
       self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
+    self.conn.commit()
    
   def statusUPDATE(self,itemName,value):
-    self.query('UPDATE status SET value=' + value + ' WHERE "key"="' + itemName + '"')
+    self.query('UPDATE status SET value=' + str(value) + ' WHERE `key`="' + itemName + '"')
+    self.conn.commit()
 
   def getValue(self,q):
-    self.cur.execute("SELECT value FROM status WHERE key='" + q + "'")
+    self.cur.execute("SELECT value FROM status WHERE `key`='" + q + "'")
     return str(self.cur.fetchone()[0])
 

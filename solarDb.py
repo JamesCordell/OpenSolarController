@@ -23,7 +23,6 @@ class Db:
         eprint('Closing db')
 
   def __del__(self):
-    self.conn.commit()
     self.cur.close()
     self.conn.close()
 
@@ -42,13 +41,15 @@ class Db:
         self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
     except TypeError:
       self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
-    self.conn.commit()
    
   def statusUPDATE(self,itemName,value):
     self.query('UPDATE status SET value=' + str(value) + ' WHERE `key`="' + itemName + '"')
-    self.conn.commit()
 
   def getValue(self,q):
     self.cur.execute("SELECT value FROM status WHERE `key`='" + q + "'")
+    return str(self.cur.fetchone()[0])
+
+  def getIntValue(self,q):
+    self.cur.execute("SELECT CAST(value AS int) FROM status WHERE `key`='" + q + "'")
     return str(self.cur.fetchone()[0])
 

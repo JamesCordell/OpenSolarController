@@ -120,9 +120,9 @@ class History(TabbedPanel):
     super(History, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    self.collInTempPlot.points  = self.db.query("select time,value from log where itemId=1 order by time desc") #initalise
+    self.collInTempPlot.points  = self.db.query("select time,CAST(value AS INT) from log where itemId=1 order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
-    self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc") #initalise
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=2 order by time desc") #initalise
     self.graphXSeconds = 3600  #  Default graph zoom
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     Clock.schedule_interval(self.updateScreen, 1)
@@ -134,8 +134,8 @@ class History(TabbedPanel):
     self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
-    self.collInTempPlot.points = self.db.query("select time,value from log where itemId=1 order by time desc")
-    self.collOutTempPlot.points = self.db.query("select time,value from log where itemId=2 order by time desc")
+    self.collInTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=1 order by time desc")
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=2 order by time desc")
     self.graph.add_plot(self.collInTempPlot)
     self.graph.add_plot(self.collOutTempPlot)
 
@@ -185,24 +185,24 @@ class Status(TabbedPanel):
     super(Status, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
     self.collInTemp = ''
-    self.heaterOffTemp = self.db.getValue('heaterOffTemp')
+    self.heaterOffTemp = self.db.getIntValue('heaterOffTemp')
     Clock.schedule_interval(self.updateScreen, 1)
 
   def updateScreen(self, dt):
-    self.collInTemp = self.db.getValue('collInTemp')
-    self.collOutTemp = self.db.getValue('collOutTemp')
-    self.tankTopTemp = self.db.getValue('tankTopTemp')
+    self.collInTemp     = self.db.getValue('collInTemp')
+    self.collOutTemp    = self.db.getValue('collOutTemp')
+    self.tankTopTemp    = self.db.getValue('tankTopTemp')
     self.tankBottomTemp = self.db.getValue('tankBottomTemp')
-    self.heaterActive = self.db.getValue('heaterActive')
-    self.pumpActive = self.db.getValue('pumpActive')
+    self.heaterActive   = self.db.getValue('heaterActive')
+    self.pumpActive     = self.db.getValue('pumpActive')
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
-    self.db.query("UPDATE status SET value = value + 1 WHERE key='heaterOffTemp'")
+    self.db.query("UPDATE `status` SET `value` = `value` + 1 WHERE `key`='heaterOffTemp'")
 
   def tempDown(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
-    self.db.query("UPDATE status SET value=value - 1 WHERE key='heaterOffTemp'")
+    self.db.query("UPDATE `status` SET `value` = `value` - 1 WHERE `key`='heaterOffTemp'")
 
 
 class OpenSolarController(App,BoxLayout):

@@ -3,6 +3,7 @@ import sqlite3
 from sqlite3 import Error
 import mysql.connector
 import time
+import settings
 
 class Db:
   conn = None
@@ -12,7 +13,7 @@ class Db:
     """ create a database connection to a SQLite database """
     try:
       #self.conn = sqlite3.connect(db_file, isolation_level=None)
-      self.conn = mysql.connector.connect(user='openSolar',password='opensolar', database='OpenSolar',host='localhost',buffered=True)
+      self.conn = mysql.connector.connect(user=settings.dbUser,password=settings.dbPassword, database=settings.dbName,host=settings.dbHost,buffered=True)
       self.cur = self.conn.cursor()
     except Error as e:
       print(e)

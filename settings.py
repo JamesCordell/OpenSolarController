@@ -19,5 +19,8 @@ arduinoSerialDev     = '/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0'
 ifName               = 'wlp3s0'
 tankBottomTempDSID   = '020a92454e33'
 tankTopTempDSID      = '021792453daa'
-
+dbUser               = 'openSolar'
+dbPassword           = 'openSolar'
+dbName               = 'openSolar'
+dbHost               = '127.0.0.1'
 

@@ -18,7 +18,6 @@ from kivy.properties import ObjectProperty
 from kivy.app import App  
 from kivy.uix.widget import Widget  
 from kivy.config import Config
-Config.set('graphics','resizable',False)
 
 import settings
 from solarDb import Db
@@ -196,7 +195,7 @@ class Status(TabbedPanel):
     self.collOutTemp    = self.db.getValue('collOutTemp')
     self.tankTopTemp    = self.db.getValue('tankTopTemp')
     self.tankBottomTemp = self.db.getValue('tankBottomTemp')
-    self.heaterActive   = self.db.getValue('heaterActive')
+    self.heaterActive   = "Yes" if self.db.getValue('heaterActive') else "Off"
     self.pumpActive     = self.db.getValue('pumpActive')
 
   def tempUp(self):
@@ -225,12 +224,17 @@ class OpenSolarController(App,BoxLayout):
       ni.ifaddresses(settings.ifName)
       self.ipAddr = ni.ifaddresses(settings.ifName)[ni.AF_INET][0]['addr']
     except:
+      settings.ifName = settings.ifNameFallback  # Fall back to desktop for testing
       print("Error: Can't find: " + settings.ifName)
 
   def build(self):
     self.title = 'Open Solar Controller'
     Window.borderless = True
-    Window.size = (800,480)
+    Window.resizable = False
+    Window.size = (800,440)
+    Window.top = 0
+    Window.left = 0
+    Window.position = 'custom'
     return OpenSolarController()
 
   def close():

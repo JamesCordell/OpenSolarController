@@ -27,8 +27,8 @@ dbPassword           = 'openSolar'
 dbName               = 'openSolar'
 dbHost               = '127.0.0.1'
 
-logId = {    collInTempID       : 0,
-             collOutTempID      : 1,
-             tankTopTempDSID    : 2,
-             tankBottomTempDSID : 3 }
+logId = {    collInTempID       : '0',
+             collOutTempID      : '1',
+             tankTopTempDSID    : '2',
+             tankBottomTempDSID : '3' }
 

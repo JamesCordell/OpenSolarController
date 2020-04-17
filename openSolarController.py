@@ -20,7 +20,7 @@ from kivy.uix.widget import Widget
 from kivy.config import Config
 
 import settings
-from solarDb import Db
+from openSolarDb import Db
 
 Builder.load_file('./opensolarcontrollerUX.kv')
 
@@ -85,13 +85,13 @@ class History(TabbedPanel):
 
 class Status(TabbedPanel):
 
-  collInTemp      = StringProperty()
-  collOutTemp     = StringProperty()
-  tankTopTemp     = StringProperty()
-  tankBottomTemp  = StringProperty()
-  heaterActive    = StringProperty()
-  pumpActive      = StringProperty()
-  heaterOffTemp   = StringProperty()
+  collInTemp      = StringProperty('0')
+  collOutTemp     = StringProperty('0')
+  tankTopTemp     = StringProperty('0')
+  tankBottomTemp  = StringProperty('0')
+  heaterActive    = StringProperty('Off')
+  pumpActive      = StringProperty('Off')
+  heaterOffTemp   = StringProperty('0')
   collInTempPlot  = None
   collOutTempPlot = None
 
@@ -100,7 +100,6 @@ class Status(TabbedPanel):
   def __init__(self, **kwargs):
     super(Status, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
-    self.heaterOffTemp = self.db.getIntValue('heaterOffTemp')
     Clock.schedule_interval(self.updateScreen, 1)
 
   def updateScreen(self, dt):
@@ -113,11 +112,11 @@ class Status(TabbedPanel):
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)
-    self.db.query("UPDATE `status` SET `value` = `value` + 1 WHERE `key`='heaterOffTemp'")
+    self.db.statusUPDATE('heaterOffTemp',self.heaterOffTemp)
 
   def tempDown(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) - 1)
-    self.db.query("UPDATE `status` SET `value` = `value` - 1 WHERE `key`='heaterOffTemp'")
+    self.db.statusUPDATE('heaterOffTemp',self.heaterOffTemp)
 
 
 class OpenSolarController(App,BoxLayout):
@@ -142,7 +141,7 @@ class OpenSolarController(App,BoxLayout):
 
   def build(self):
     self.title = 'Open Solar Controller'
-    Window.borderless = True
+    #Window.borderless = True
     Window.resizable = False
     Window.size = (800,440)
     Window.top = 0

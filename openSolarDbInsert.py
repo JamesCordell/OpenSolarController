@@ -13,11 +13,12 @@ import statistics
 from w1thermsensor import W1ThermSensor, SensorNotReadyError, NoSensorFoundError
 import settings  #User defined
 
-from solarDb import Db
+from openSolarDb import Db
 
-tX = dict()
-tX[settings.tankBottomTempDSID] = "t3"
-tX[settings.tankTopTempDSID] = "t4"
+sensorId = enum(collInTemp=settings.collInTempDSID,
+                 collOutTemp=settings.collOutTempDSID,
+                 tankTopTemp=3,
+                 tankBottomTemp=4)
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -31,16 +32,16 @@ def truncate(x):
   return float(int(x * 10) / 10)
 
 def getDS18b20(sensorsData):
-  for s in W1ThermSensor.get_available_sensors():
+  for W1sensorID in W1ThermSensor.get_available_sensors():
     avgTemp=[]
     for i in range(3):
       try:
-        avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,s.id).get_temperature())
+        avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,W1sensorID.id).get_temperature())
         time.sleep(1)
       except SensorNotReadyError or NoSensorFoundError:
         pass
     try:
-      sensorsData[ tX[s.id] ] = truncate(statistics.mode(avgTemp)) #  Translate DS18b20 to tX for simplicity
+      sensorsData[ W1SensorID.id ] = truncate(statistics.mode(avgTemp)) #  Translate DS18b20 to ID for simplicity
     except statistics.StatisticsError:
       pass
     time.sleep(1)
@@ -51,8 +52,8 @@ def getMAX(sensorsData):
   if jsonStr: #  is string not empty
     try:
       temp = json.loads(jsonStr)
-      sensorsData["t1"] = float(temp["t1"])
-      sensorsData["t2"] = float(temp["t2"])
+      sensorsData[sensorId.collInTemp]  = float(temp[settings.collInTempID])
+      sensorsData[sensorId.collOutTemp] = float(temp[settings.collOutTempID])
     except:
       eprint("Error: " + str(sys.exc_info()[0]))
 
@@ -74,18 +75,18 @@ if __name__ == '__main__':
       #getMAX(sensorsData)
       print( sensorsData )
       try:
-        db.logINSERT(4,sensorsData["t4"])
-        db.statusUPDATE('tankBottomTemp',sensorsData["t4"])
+        db.logINSERT(4,sensorsData[sensorId.tankBottomTemp])
+        db.statusUPDATE('tankBottomTemp',sensorsData[sensorId.tankBottomTemp])
       except:
         pass
       if len(sensorsData) >= 4:
         print( sensorsData )
-        db.logINSERT(1,sensorsData["t1"])
-        db.statusUPDATE('collInTemp',sensorsData["t1"])
-        db.logINSERT(2,sensorsData["t2"])
-        db.statusUPDATE('collOutTemp',sensorsData["t2"])
-        db.logINSERT(3,sensorsData["t3"])
-        db.statusUPDATE('tankBottomTemp',sensorsData["t3"])
-        db.logINSERT(4,sensorsData["t4"])
-        db.statusUPDATE('tankTopTemp',sensorsData["t4"]) 
+        db.logINSERT(1,sensorsData[sensorId.collInTemp])
+        db.statusUPDATE('collInTemp',sensorsData[sensorId.collInTemp])
+        db.logINSERT(2,sensorsData[sensorId.collInTemp])
+        db.statusUPDATE('collOutTemp',sensorsData[sensorId.CollInTemp])
+        db.logINSERT(3,sensorsData[sensorId.tankTopTemp])
+        db.statusUPDATE('tankTopTemp',sensorsData[sensorId.tankTopTemp]) 
+        db.logINSERT(4,sensorsData[sensorId.tankBottomTemp])
+        db.statusUPDATE('tankBottomTemp',sensorsData[sensorId.tankBottomTemp])
       time.sleep(1)

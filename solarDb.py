@@ -13,7 +13,8 @@ class Db:
     """ create a database connection to a SQLite database """
     try:
       #self.conn = sqlite3.connect(db_file, isolation_level=None)
-      self.conn = mysql.connector.connect(user=settings.dbUser,password=settings.dbPassword, database=settings.dbName,host=settings.dbHost,buffered=True)
+      self.conn = mysql.connector.connect(user=settings.dbUser,password=settings.dbPassword, database=settings.dbName,host=settings.dbHost,buffered=False)
+      self.conn.autocommit = True
       self.cur = self.conn.cursor()
     except Error as e:
       print(e)

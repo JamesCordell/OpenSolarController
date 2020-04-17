@@ -186,7 +186,6 @@ class Status(TabbedPanel):
   def __init__(self, **kwargs):
     super(Status, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
-    self.collInTemp = ''
     self.heaterOffTemp = self.db.getIntValue('heaterOffTemp')
     Clock.schedule_interval(self.updateScreen, 1)
 
@@ -195,8 +194,8 @@ class Status(TabbedPanel):
     self.collOutTemp    = self.db.getValue('collOutTemp')
     self.tankTopTemp    = self.db.getValue('tankTopTemp')
     self.tankBottomTemp = self.db.getValue('tankBottomTemp')
-    self.heaterActive   = "Yes" if self.db.getValue('heaterActive') else "Off"
-    self.pumpActive     = self.db.getValue('pumpActive')
+    self.heaterActive   = "Active" if self.db.getIntValue('heaterActive') == '1' else "Off"
+    self.pumpActive     = "Active" if self.db.getIntValue('pumpActive')   == '1' else "Off"
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)

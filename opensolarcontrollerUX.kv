@@ -71,6 +71,13 @@
       text: 'Setup'
       RstDocument:
         text:'\\n'.join(("This is the Open Solar Solar Controller written by James Cordell in python3","You are in the third tab."))
+      Label:
+        Button:
+          #size_hint:  .05, .05
+          text: 'Exit'
+          on_release: root.History.zoomOut()
+
+      
   GridLayout:
     id: gridTopBottom
     cols: 3

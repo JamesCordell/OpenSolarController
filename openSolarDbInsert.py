@@ -40,7 +40,7 @@ def getDS18b20(sensorsData):
       except SensorNotReadyError or NoSensorFoundError:
         pass
     try:
-      sensorsData[ tX[s.id] ] = truncate(statistics.mean(avgTemp)) #  Translate DS18b20 to tX for simplicity
+      sensorsData[ tX[s.id] ] = truncate(statistics.mode(avgTemp)) #  Translate DS18b20 to tX for simplicity
     except statistics.StatisticsError:
       pass
     time.sleep(1)

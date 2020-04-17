@@ -16,6 +16,10 @@ from kivy.garden.graph import Graph, MeshLinePlot
 from kivy.properties import ObjectProperty  
 from kivy.app import App  
 from kivy.uix.widget import Widget  
+from kivy.config import Config
+Config.set('graphics','width', '800')
+Config.set('graphics','height','480')
+#Config.set('graphics','fullscreen','fake')
 
 import settings
 from solarDb import Db

@@ -47,9 +47,9 @@ class Db:
 
   def getValue(self,q):
     self.cur.execute("SELECT value FROM status WHERE `key`='" + q + "'")
-    return str(self.cur.fetchone()[0])
+    return str(self.cur.fetchone())
 
   def getIntValue(self,q):
     self.cur.execute("SELECT CAST(value AS int) FROM status WHERE `key`='" + q + "'")
-    return str(self.cur.fetchone()[0])
+    return str(self.cur.fetchone())
 

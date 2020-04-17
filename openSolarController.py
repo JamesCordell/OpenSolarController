@@ -5,6 +5,7 @@ from kivy.lang import Builder
 from kivy.uix.widget import Widget
 from kivy.properties import StringProperty
 from kivy.clock import Clock
+from kivy.core.window import Window
 
 from datetime import datetime, timezone, timedelta
 import pytz
@@ -19,7 +20,6 @@ from kivy.uix.widget import Widget
 from kivy.config import Config
 Config.set('graphics','width', '800')
 Config.set('graphics','height','480')
-#Config.set('graphics','fullscreen','fake')
 
 import settings
 from solarDb import Db
@@ -230,7 +230,11 @@ class OpenSolarController(App,BoxLayout):
 
   def build(self):
     self.title = 'Open Solar Controller'
+    Window.borderless = True
     return OpenSolarController()
+
+  def close():
+    App.get_running_app().stop()
 
 if __name__ == '__main__':
     OpenSolarController().run()

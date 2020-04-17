@@ -15,11 +15,6 @@ import settings  #User defined
 
 from openSolarDb import Db
 
-sensorId = enum(collInTemp=settings.collInTempDSID,
-                 collOutTemp=settings.collOutTempDSID,
-                 tankTopTemp=3,
-                 tankBottomTemp=4)
-
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -32,11 +27,11 @@ def truncate(x):
   return float(int(x * 10) / 10)
 
 def getDS18b20(sensorsData):
-  for W1sensorID in W1ThermSensor.get_available_sensors():
+  for W1SensorID in W1ThermSensor.get_available_sensors():
     avgTemp=[]
     for i in range(3):
       try:
-        avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,W1sensorID.id).get_temperature())
+        avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,W1SensorID.id).get_temperature())
         time.sleep(1)
       except SensorNotReadyError or NoSensorFoundError:
         pass
@@ -52,8 +47,8 @@ def getMAX(sensorsData):
   if jsonStr: #  is string not empty
     try:
       temp = json.loads(jsonStr)
-      sensorsData[sensorId.collInTemp]  = float(temp[settings.collInTempID])
-      sensorsData[sensorId.collOutTemp] = float(temp[settings.collOutTempID])
+      sensorsData[settings.collInTempID]  = float(temp[settings.collInTempID])
+      sensorsData[settings.collOutTempID] = float(temp[settings.collOutTempID])
     except:
       eprint("Error: " + str(sys.exc_info()[0]))
 
@@ -75,18 +70,12 @@ if __name__ == '__main__':
       #getMAX(sensorsData)
       print( sensorsData )
       try:
-        db.logINSERT(4,sensorsData[sensorId.tankBottomTemp])
-        db.statusUPDATE('tankBottomTemp',sensorsData[sensorId.tankBottomTemp])
+        db.logINSERT(sensorsData)
+        db.statusUPDATE(sensorsData)
       except:
         pass
       if len(sensorsData) >= 4:
         print( sensorsData )
-        db.logINSERT(1,sensorsData[sensorId.collInTemp])
-        db.statusUPDATE('collInTemp',sensorsData[sensorId.collInTemp])
-        db.logINSERT(2,sensorsData[sensorId.collInTemp])
-        db.statusUPDATE('collOutTemp',sensorsData[sensorId.CollInTemp])
-        db.logINSERT(3,sensorsData[sensorId.tankTopTemp])
-        db.statusUPDATE('tankTopTemp',sensorsData[sensorId.tankTopTemp]) 
-        db.logINSERT(4,sensorsData[sensorId.tankBottomTemp])
-        db.statusUPDATE('tankBottomTemp',sensorsData[sensorId.tankBottomTemp])
+        db.logINSERT(sensorsData)
+        db.statusUPDATE(sensorsData)
       time.sleep(1)

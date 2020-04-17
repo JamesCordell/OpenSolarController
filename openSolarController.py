@@ -36,9 +36,9 @@ class History(TabbedPanel):
     super(History, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    self.collInTempPlot.points  = self.db.query("select time,CAST(value AS INT) from log where itemId=1 order by time desc") #initalise
+    self.collInTempPlot.points  = self.db.query("select time,CAST(value AS INT) from log where `key`=" + logId.collInTemp + " order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
-    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=2 order by time desc") #initalise
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + logId.collOutTemp + " order by time desc") #initalise
     self.graphXSeconds = 3600  #  Default graph zoom
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     Clock.schedule_interval(self.updateScreen, 1)
@@ -50,8 +50,8 @@ class History(TabbedPanel):
     self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
-    self.collInTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=1 order by time desc")
-    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where itemId=2 order by time desc")
+    self.collInTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + logId.collInTemp + " order by time desc")
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + logId.collOutTemp + " order by time desc")
     self.graph.add_plot(self.collInTempPlot)
     self.graph.add_plot(self.collOutTempPlot)
 

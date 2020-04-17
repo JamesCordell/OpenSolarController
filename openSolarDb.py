@@ -5,6 +5,11 @@ import mysql.connector
 import time
 import settings
 
+logId = {    settings.collInTempID       : 0,
+             settings.collOutTempID      : 1,
+             settings.tankTopTempDSID    : 2,
+             settings.tankBottomTempDSID : 3 }
+
 class Db:
   conn = None
   cur = None
@@ -31,20 +36,23 @@ class Db:
     self.cur.execute(q)
     return self.cur.fetchmany(24 * 60 * 60)
 
-  def logINSERT(self,itemId,value): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
-    self.cur.execute('SELECT value,time FROM log WHERE itemId=' + str(itemId) + ' order by time desc')
-    try:
-      valueDb = float(self.cur.fetchone()[0])
-      epoch = int(self.cur.fetchone()[1])
-      #print(str(epoch - int(time.time())))
-      #print(str(valueDb) + " " + str(value))
-      if (float(value) > (valueDb + 1) or float(value) < (valueDb - 1)) or int(time.time() - 300) > epoch: # if temp change is bigger than one degree log temp.
-        self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
-    except TypeError:
-      self.query('INSERT INTO log (time,itemId,value) VALUES (' + str(int(time.time())) + ',' + str(itemId) + ',' + str(value) + ')')
+  def logINSERT(self,sensorsData): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
+    for key,value in sensorsData.items():
+      logNum = logId[ key ]
+      self.cur.execute('SELECT value,time FROM log WHERE `key`=' + str(logNum) + ' order by time desc')
+      try:
+        lastValueDb = float(self.cur.fetchone()[0])
+        lastTimeDb = int(self.cur.fetchone()[1])
+        #print(str(epoch - int(time.time())))
+        #print(str(valueDb) + " " + str(value))
+        if (float(value) > (lastValueDb + 1) or float(value) < (lastValueDb - 1)) or int(time.time() - 300) > lastTimeDb: # if temp change is bigger than one degree log temp.
+          self.query('INSERT INTO log (`time`,`key`,`value`) VALUES (' + str(int(time.time())) + ',' + str(logNum) + ',' + str(value) + ')')
+      except TypeError:
+        self.query('INSERT INTO log (`time`,`key`,`value`) VALUES (' + str(int(time.time())) + ',' + str(logNum) + ',' + str(value) + ')')
    
-  def statusUPDATE(self,itemName,value):
-    self.query('UPDATE status SET value=' + str(value) + ' WHERE `key`="' + itemName + '"')
+  def statusUPDATE(self,sensorsData):
+    for key,value in sensorsData.items():
+      self.query('UPDATE status SET value=' + str(value) + ' WHERE `key`="' + key + '"')
 
   def getValue(self,q):
     self.cur.execute("SELECT value FROM status WHERE `key`='" + q + "'")

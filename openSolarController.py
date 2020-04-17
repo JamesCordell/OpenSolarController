@@ -18,8 +18,7 @@ from kivy.properties import ObjectProperty
 from kivy.app import App  
 from kivy.uix.widget import Widget  
 from kivy.config import Config
-Config.set('graphics','width', '800')
-Config.set('graphics','height','480')
+Config.set('graphics','resizable',False)
 
 import settings
 from solarDb import Db
@@ -231,6 +230,7 @@ class OpenSolarController(App,BoxLayout):
   def build(self):
     self.title = 'Open Solar Controller'
     Window.borderless = True
+    Window.size = (800,400)
     return OpenSolarController()
 
   def close():

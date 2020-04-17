@@ -230,7 +230,7 @@ class OpenSolarController(App,BoxLayout):
   def build(self):
     self.title = 'Open Solar Controller'
     Window.borderless = True
-    Window.size = (800,400)
+    Window.size = (800,480)
     return OpenSolarController()
 
   def close():

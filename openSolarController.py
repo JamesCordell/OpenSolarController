@@ -36,9 +36,9 @@ class History(TabbedPanel):
     super(History, self).__init__(**kwargs)
     self.db = Db(settings.dbFile)
     self.collInTempPlot = MeshLinePlot(color=[1, 0, 0, 1])
-    self.collInTempPlot.points  = self.db.query("select time,CAST(value AS INT) from log where `key`=" + settings.logId[settings.collInTempID] + " order by time desc") #initalise
+    self.collInTempPlot.points  = self.db.query("select time,CAST(value AS INT) from log where `Id`=" + settings.logId[settings.collInTempID] + " order by time desc") #initalise
     self.collOutTempPlot = MeshLinePlot(color=[1, .6, 0, 1])
-    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + settings.logId[settings.collOutTempID] + " order by time desc") #initalise
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `Id`=" + settings.logId[settings.collOutTempID] + " order by time desc") #initalise
     self.graphXSeconds = 3600  #  Default graph zoom
     self.startDateTime = self.endDateTime - timedelta(seconds=self.graphXSeconds)
     Clock.schedule_interval(self.updateScreen, 1)
@@ -50,8 +50,8 @@ class History(TabbedPanel):
     self.graph.xlabel = "From: " + self.startDateTime.ctime() + "           Until: " + self.endDateTime.ctime()
     self.graph.xmin = (latestTime - self.graphXSeconds)
     self.graph.xmax = latestTime
-    self.collInTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + settings.logId[settings.collInTempID] + " order by time desc")
-    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `key`=" + settings.logId[settings.collOutTempID] + " order by time desc")
+    self.collInTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `Id`=" + settings.logId[settings.collInTempID] + " order by time desc")
+    self.collOutTempPlot.points = self.db.query("select time,CAST(value AS INT) from log where `Id`=" + settings.logId[settings.collOutTempID] + " order by time desc")
     self.graph.add_plot(self.collInTempPlot)
     self.graph.add_plot(self.collOutTempPlot)
 
@@ -103,13 +103,13 @@ class Status(TabbedPanel):
     Clock.schedule_interval(self.updateScreen, 1)
 
   def updateScreen(self, dt):
-    self.collInTemp     = self.db.getValue('collInTemp')
-    self.collOutTemp    = self.db.getValue('collOutTemp')
-    self.tankTopTemp    = self.db.getValue('tankTopTemp')
-    self.tankBottomTemp = self.db.getValue('tankBottomTemp')
-    self.heaterOffTemp  = self.db.getValue('heaterOffTemp')
-    self.heaterActive   = "Active" if self.db.getIntValue('heaterActive') == '1' else "Off"
-    self.pumpActive     = "Active" if self.db.getIntValue('pumpActive')   == '1' else "Off"
+    self.collInTemp     = self.db.getStatusValueViaName('collInTemp')
+    self.collOutTemp    = self.db.getStatusValueViaName('collOutTemp')
+    self.tankTopTemp    = self.db.getStatusValueViaName('tankTopTemp')
+    self.tankBottomTemp = self.db.getStatusValueViaName('tankBottomTemp')
+    self.heaterOffTemp  = self.db.getStatusValueViaName('heaterOffTemp')
+    self.heaterActive   = "Active" if self.db.getStatusIntValueViaName('heaterActive') == '1' else "Off"
+    self.pumpActive     = "Active" if self.db.getStatusIntValueViaName('pumpActive')   == '1' else "Off"
 
   def tempUp(self):
     self.heaterOffTemp = str(int(self.heaterOffTemp) + 1)

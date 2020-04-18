@@ -67,15 +67,13 @@ if __name__ == '__main__':
     while True:
       sensorsData = dict()
       getDS18b20(sensorsData)
-      #getMAX(sensorsData)
-      print( sensorsData )
+      getMAX(sensorsData)
       try:
         db.logINSERT(sensorsData)
         db.statusUPDATE(sensorsData)
       except:
         pass
-      if len(sensorsData) >= 4:
-        print( sensorsData )
-        db.logINSERT(sensorsData)
-        db.statusUPDATE(sensorsData)
+      print( sensorsData )
+      db.logINSERT(sensorsData)
+      db.statusUPDATE(sensorsData)
       time.sleep(1)

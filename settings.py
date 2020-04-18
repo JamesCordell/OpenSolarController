@@ -14,21 +14,11 @@
 #);
 
 timeZone             = "Europe/London"
-dbFile               = "OpenSolar.db"
 arduinoSerialDev     = '/dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0'
 ifName               = 'wlan0'
 ifNameFallback       = 'wlp3s0'
-collInTempID         = 't1'
-collOutTempID        = 't2'
-tankTopTempDSID      = '021792453daa'
-tankBottomTempDSID   = '020a92454e33'
+dbFile               = 'OpenSolar.db'
 dbUser               = 'openSolar'
 dbPassword           = 'openSolar'
 dbName               = 'openSolar'
 dbHost               = '127.0.0.1'
-
-logId = {    collInTempID       : '0',
-             collOutTempID      : '1',
-             tankTopTempDSID    : '2',
-             tankBottomTempDSID : '3' }
-

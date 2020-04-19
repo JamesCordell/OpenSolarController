@@ -69,11 +69,11 @@ if __name__ == '__main__':
       getDS18b20(sensorsData)
       getMAX(sensorsData)
       try:
-        db.logINSERT(sensorsData)
-        db.statusUPDATE(sensorsData)
+        #db.logINSERT(sensorsData)
+        db.statusUPDATE(sensorsData,'sensorId')
       except:
         pass
       print( sensorsData )
-      db.logINSERT(sensorsData)
-      db.statusUPDATE(sensorsData)
+      #db.logINSERT(sensorsData)
+      db.statusUPDATE(sensorsData,'sensorId')
       time.sleep(1)

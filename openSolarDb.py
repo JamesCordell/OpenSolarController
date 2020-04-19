@@ -31,23 +31,26 @@ class Db:
     self.cur.execute(q)
     return self.cur.fetchmany(24 * 60 * 60)
 
+  def getLog(self,sensorName):
+    self.cur.execute("SELECT time,CAST(value AS INT) FROM `log` WHERE `Id`=(select `Id` from `status` where `status`.`name`='" + str(sensorName) + "') order by time desc")
+    return self.cur.fetchmany(24 * 60 * 60)
+
   def logINSERT(self,sensorsData): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
     for sensorId,value in sensorsData.items():
-      self.cur.execute('SELECT value,time FROM `log` WHERE `Id`=(select `Id` from `status` where `status`.`sensorId`=' + str(sensorId) + ') order by time desc')
+      self.cur.execute("SELECT value,time FROM `log` WHERE `Id`=(select `Id` from `status` where `status`.`sensorId`='" + str(sensorId) + "') order by time desc")
       try:
         lastValueDb = float(self.cur.fetchone()[0])
         lastTimeDb = int(self.cur.fetchone()[1])
         #print(str(epoch - int(time.time())))
         #print(str(valueDb) + " " + str(value))
         if (float(value) > (lastValueDb + 1) or float(value) < (lastValueDb - 1)) or int(time.time() - 300) > lastTimeDb: # if temp change is bigger than one degree log temp.
-          self.query('INSERT INTO log (`time`,`Id`,`value`) VALUES (' + str(int(time.time())) + ',' + str(logNum) + ',' + str(value) + ')')
+          self.query("INSERT INTO log (`time`,`Id`,`value`) VALUES ('" + str(int(time.time())) + "','" + str(logNum) + "','" + str(value) + "')")
       except TypeError:
-        self.query('INSERT INTO log (`time`,`Id`,`value`) VALUES (' + str(int(time.time())) + ',' + str(logNum) + ',' + str(value) + ')')
+        self.query("INSERT INTO log (`time`,`Id`,`value`) VALUES ('" + str(int(time.time())) + "','" + str(logNum) + "','" + str(value) + "')")
    
-  def statusUPDATE(self,sensorsData):
+  def statusUPDATE(self,sensorsData,field):
     for sensorId,value in sensorsData.items():
-      print('UPDATE status SET value=' + str(value) + ' WHERE `sensorId`="' + sensorId + '"')
-      self.query('UPDATE status SET value=' + str(value) + ' WHERE `sensorId`="' + sensorId + '"')
+      self.query("UPDATE status SET value=" + str(value) + ",time=" + time.time() + " WHERE `" + field + "`='" + sensorId + "'" )
 
   def getStatusValueViaName(self,name):
     self.cur.execute("SELECT value FROM status WHERE `name`='" + name + "'")

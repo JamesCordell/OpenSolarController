@@ -37,7 +37,6 @@ class Db:
 
   def logINSERT(self,sensorsData): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
     for sensorId,value in sensorsData.items():
-      print("SELECT Id,value,time from `openSolar`.`status` where `sensorId`='" + str(sensorId) + "' order by time desc")
       self.cur.execute("SELECT Id,value,time from `openSolar`.`status` where `sensorId`='" + str(sensorId) + "' order by time desc")
       epochTime = str()
       try:
@@ -45,7 +44,6 @@ class Db:
         Id = str(res[0])
         value = float(res[1])
         epochTime = str(int(res[2]))
-        #print(str(epoch - int(time.time())))
         #print(str(valueDb) + " " + str(value))
         if (float(value) > (value + 1) or float(value) < (value - 1)) or int(time.time() - 300) > epochTime: # if temp change is bigger than one degree log temp.
           self.query("INSERT INTO log (`Id`,`time`,`value`) VALUES ('" + str(Id) + "','" + epochTime + "','" + str(value) + "')")

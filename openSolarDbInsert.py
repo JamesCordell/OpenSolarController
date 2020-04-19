@@ -34,11 +34,13 @@ def getDS18b20(sensorsData):
         avgTemp.append(W1ThermSensor(W1ThermSensor.THERM_SENSOR_DS18B20,W1SensorID.id).get_temperature())
         time.sleep(1)
       except SensorNotReadyError or NoSensorFoundError:
-        pass
+        eprint("Sensor Error: " + str(sys.exc_info()[0]))
+    if statistics.variance(avgTemp) > 0.34:  # 20,20,21 we allow one degree error but no 20,21,22
+      eprint("Sensor DS18b20 bigger than 1 degree C")
     try:
-      sensorsData[ W1SensorID.id ] = truncate(statistics.mode(avgTemp)) #  Translate DS18b20 to ID for simplicity
+      sensorsData[ W1SensorID.id ] = truncate(statistics.mean(avgTemp)) #  Translate DS18b20 to ID for simplicity
     except statistics.StatisticsError:
-      pass
+      eprint("Stastics Error: " + str(sys.exc_info()[0]))
     time.sleep(1)
 
 def getMAX(sensorsData):
@@ -47,33 +49,36 @@ def getMAX(sensorsData):
   if jsonStr: #  is string not empty
     try:
       temp = json.loads(jsonStr)
-      sensorsData['t1']  = float(temp['t1'])
+      sensorsData['t1'] = float(temp['t1'])
       sensorsData['t2'] = float(temp['t2'])
     except:
+      eprint("Fault from Arduino f1:" + sensorsData["f1"] + " f2:" + sensorsData["f2"])
       eprint("Error: " + str(sys.exc_info()[0]))
+  sensorsData = dict()
+
+def initSerial():
+  try:
+    return serial.Serial(settings.arduinoSerialDev,
+    baudrate=115200,
+    bytesize=serial.EIGHTBITS,
+    parity=serial.PARITY_EVEN,
+    stopbits=serial.STOPBITS_ONE,
+    timeout=1)
+  except:
+    eprint("Serial Error: " + str(sys.exc_info()[0]))
 
 if __name__ == '__main__':
     db = Db(settings.dbFile)
-    try:
-      dev = serial.Serial(settings.arduinoSerialDev,
-      baudrate=115200,
-      bytesize=serial.EIGHTBITS,
-      parity=serial.PARITY_EVEN,
-      stopbits=serial.STOPBITS_ONE,
-      timeout=1)
-    except:
-      pass
-
+    dev = None
+    sensorsData = dict()
     while True:
-      sensorsData = dict()
+      dev = initSerial()
+      if dev is not None:
+        getMAX(sensorsData)
+      else:
+        dev = initSerial()
+        
       getDS18b20(sensorsData)
-      #getMAX(sensorsData)
-      try:
-        db.statusUPDATE(sensorsData,'sensorId')
-        db.logINSERT(sensorsData)
-      except:
-        pass
-      print( sensorsData )
       db.statusUPDATE(sensorsData,'sensorId')
       db.logINSERT(sensorsData)
       time.sleep(1)

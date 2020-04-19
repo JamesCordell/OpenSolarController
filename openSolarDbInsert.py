@@ -11,7 +11,7 @@ import sys
 import serial
 import statistics
 from w1thermsensor import W1ThermSensor, SensorNotReadyError, NoSensorFoundError
-import settings  #User defined
+import settings
 
 from openSolarDb import Db
 
@@ -47,8 +47,8 @@ def getMAX(sensorsData):
   if jsonStr: #  is string not empty
     try:
       temp = json.loads(jsonStr)
-      sensorsData[settings.collInTempID]  = float(temp[settings.collInTempID])
-      sensorsData[settings.collOutTempID] = float(temp[settings.collOutTempID])
+      sensorsData['t1']  = float(temp['t1'])
+      sensorsData['t2'] = float(temp['t2'])
     except:
       eprint("Error: " + str(sys.exc_info()[0]))
 
@@ -67,13 +67,13 @@ if __name__ == '__main__':
     while True:
       sensorsData = dict()
       getDS18b20(sensorsData)
-      getMAX(sensorsData)
+      #getMAX(sensorsData)
       try:
-        #db.logINSERT(sensorsData)
         db.statusUPDATE(sensorsData,'sensorId')
+        db.logINSERT(sensorsData)
       except:
         pass
       print( sensorsData )
-      #db.logINSERT(sensorsData)
       db.statusUPDATE(sensorsData,'sensorId')
+      db.logINSERT(sensorsData)
       time.sleep(1)

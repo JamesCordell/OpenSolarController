@@ -1,4 +1,4 @@
-This is a GUI application that can log temperatures from DS18b10 temperature sensors and store them in a database. It's designed to display temerature readings and to be able to set a temperature. The tabs show a history that displays a graph.
+This is a GUI application that can log temperatures from DS18b10 and MAX31865 temperature sensors and store them in a database. It's designed to display temerature readings and to be able to set a temperature. The tabs show a history that displays a graph.
 
 By running 
 openSolarDbInsert.py

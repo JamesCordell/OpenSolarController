@@ -14,9 +14,10 @@ Adafruit_MAX31865 max_2 = Adafruit_MAX31865(9);
 #define RREF2 429.2
 
 void setup() {
+
   Serial.begin(115200,SERIAL_8E1);
   SPI.begin();
-  max_1.begin(MAX31865_3WIRE);  // set to 2WIRE or 4WIRE as necessary
+  max_1.begin(MAX31865_3WIRE);  // set to 2WIRE, 3WIRE or 4WIRE as necessary
   max_2.begin(MAX31865_3WIRE);
 }
 

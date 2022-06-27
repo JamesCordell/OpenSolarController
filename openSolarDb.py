@@ -37,7 +37,7 @@ class Db:
 
   def logINSERT(self,sensorsData): #  Dirivative compression. If the temperature changes beyond a limit or a minimum ammount of time log temperature.
     for sensorId,value in sensorsData.items():
-      self.cur.execute("SELECT Id,value,time from `openSolar`.`status` where `sensorId`='" + str(sensorId) + "' order by time desc")
+      self.cur.execute("SELECT sensorId,value,time from `openSolar`.`status` where `sensorId`='" + str(sensorId) + "' order by time desc")
       epochTime = str()
       try:
         res =  self.cur.fetchone()
@@ -46,9 +46,10 @@ class Db:
         epochTime = str(int(res[2]))
         #print(str(valueDb) + " " + str(value))
         if (float(value) > (value + 1) or float(value) < (value - 1)) or int(time.time() - 300) > epochTime: # if temp change is bigger than one degree log temp.
-          self.query("INSERT INTO log (`Id`,`time`,`value`) VALUES ('" + str(Id) + "','" + epochTime + "','" + str(value) + "')")
+          self.query("INSERT INTO log (`sensorId`,`time`,`value`) VALUES ('" + str(Id) + "','" + epochTime + "','" + str(value) + "')")
       except TypeError:
-        self.query("INSERT INTO log (`Id`,`time`,`value`) VALUES ('" + str(Id) + "','" + epochTime + "','" + str(value) + "')")
+        pass
+        #self.query("INSERT INTO log (`sensorId`,`time`,`value`) VALUES ('" + str(Id) + "','" + epochTime + "','" + str(value) + "')")
    
   def statusUPDATE(self,sensorsData,field):
     for sensorId,value in sensorsData.items():

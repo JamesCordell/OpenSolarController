@@ -1,5 +1,11 @@
 This is a GUI application that can log temperatures from DS18b10 and MAX31865 temperature sensors and store them in a database. It's designed to display temerature readings and to be able to set a temperature. The tabs show a history that displays a graph.
 
+
+On debian dependancies for ssh Xforwarded Arduino
+apt install libxrender1 libxtst-dev libfontmanager libfreetype-dev libfreetype6 fontconfig
+
+./arduino-1.8.19/arduino --board arduino:avr:nano:cpu=atmega328old  --port /dev/ttyUSB1 --upload p100_arduino_nano.ino 
+
 By running 
 openSolarDbInsert.py
 

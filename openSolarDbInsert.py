@@ -26,12 +26,20 @@ def getMAX(sensorsData,dev):
     dev.write(b'\n') #  arduino code expects a carrier return to initiate sending 1 packet of data.
   except AttributeError:
       return
-  jsonStr = dev.readline().decode("utf-8")  #  decode two bytes and remove \n
-  if jsonStr: #  is string not empty
+  jsonStr = dev.readline().decode("utf-8")
+  if jsonStr: # if data
     try:
       temp = json.loads(jsonStr)
-      sensorsData['t1'] = float(temp['t1'])
-      sensorsData['t2'] = float(temp['t2'])
+      port = str(dev.port[32]) # 32th charicter is the uniq path letter symbolysing which port the arduino is plugged into.
+      if port == 'a':
+        sensorsData['t1'] = float(temp['t1'])
+        sensorsData['t2'] = float(temp['t2'])
+      if port == 'b':
+        sensorsData['t3'] = float(temp['t1'])
+        sensorsData['t4'] = float(temp['t2'])
+
+      assert(temp['f1'] == "")
+      assert(temp['f2'] == "")
     except:
       eprint("Fault from Arduino f1:" + sensorsData["f1"] + " f2:" + sensorsData["f2"])
       eprint("Error: " + str(sys.exc_info()[0]))
@@ -40,7 +48,7 @@ def getMAX(sensorsData,dev):
 def initSerial(serialNum):
   if serialNum == 0:
     try:
-        return serial.Serial(settings.arduinoSerialDev0,
+        return serial.Serial(port=settings.arduinoSerialDev0,
         baudrate=115200,
         bytesize=serial.EIGHTBITS,
         parity=serial.PARITY_EVEN,
@@ -50,8 +58,7 @@ def initSerial(serialNum):
         eprint("Serial Error: " + str(sys.exc_info()[0]))
   if serialNum == 1:
     try:
-        return serial.Serial(settings.arduinoSerialDev1,
-        #baudrate=115200,
+        return serial.Serial(port=settings.arduinoSerialDev1,
         baudrate=115200,
         bytesize=serial.EIGHTBITS,
         parity=serial.PARITY_EVEN,
@@ -75,10 +82,10 @@ if __name__ == '__main__':
         dev0 = initSerial(0)
         dev1 = initSerial(1)
         
-      print(sensorsData0)
-      print(sensorsData1)
-      db.statusUPDATE(sensorsData0,'sensorId')
-      db.statusUPDATE(sensorsData1,'sensorId')
+      #print(sensorsData0)
+      #print(sensorsData1)
       db.logINSERT(sensorsData0)
       db.logINSERT(sensorsData1)
+      db.statusUPDATE(sensorsData0,'sensorId')
+      db.statusUPDATE(sensorsData1,'sensorId')
       time.sleep(1)

@@ -10,8 +10,23 @@ Arduino_CRC32 crc32;
 Adafruit_MAX31865 max_1 = Adafruit_MAX31865(10);
 Adafruit_MAX31865 max_2 = Adafruit_MAX31865(9);
 // The value of the Rref resistor. Use 430.0!
-#define RREF1 432.1
-#define RREF2 429.2
+/*
+//#define RREF1 432.1
+//#define RREF2 429.2
+*/
+// Roof array pair
+/*
+#define RREF1 430.9
+#define RREF2 427.2
+*/
+
+//*
+//Tuned via temp instead of multimeter
+#define RREF1 430.9
+#define RREF2 427.8
+//*/
+
+
 
 void setup() {
 

@@ -33,7 +33,7 @@ void loop() {
   if (Serial.available() > 0) {
     delay(10);
     while(Serial.available()) {
-    Serial.read();
+      Serial.read();
     } 
     //Serial.read();//read number of times.
 
@@ -48,30 +48,30 @@ void loop() {
     uint8_t fault1 = max_1.readFault();
     uint8_t fault2 = max_2.readFault();
 
-  String f1 = "";
-  if (fault1) {
-    f1 = String(fault1);
-    max_1.clearFault();
-  }
+    String f1 = "";
+    if (fault1) {
+      f1 = String(fault1);
+      max_1.clearFault();
+    }
 
-  String f2 = "";
-  if (fault2) {
-    f2 = String(fault2);
-    max_2.clearFault();
-  }
+    String f2 = "";
+    if (fault2) {
+      f2 = String(fault2);
+      max_2.clearFault();
+    }
 
-  const int capacity = JSON_ARRAY_SIZE(6) + 2*JSON_OBJECT_SIZE(2);
-  StaticJsonDocument<capacity> doc;
-  doc["t1"] = t1;
-  doc["r1"] = r1;
-  doc["t2"] = t2;
-  doc["r2"] = r2;
-  doc["f1"] = f1;
-  doc["f2"] = f2;
-  char output[128];
-  serializeJson(doc,output);
-  serializeJson(doc, Serial);
-  Serial.println();
-  Serial.read();
+    const int capacity = JSON_ARRAY_SIZE(6) + 2*JSON_OBJECT_SIZE(2);
+    StaticJsonDocument<capacity> doc;
+    doc["t1"] = t1;
+    doc["r1"] = r1;
+    doc["t2"] = t2;
+    doc["r2"] = r2;
+    doc["f1"] = f1;
+    doc["f2"] = f2;
+    char output[128];
+    serializeJson(doc,output);
+    serializeJson(doc, Serial);
+    Serial.println();
+    Serial.read();
   }
 }

@@ -1,42 +1,29 @@
 
-import sqlite3
-from sqlite3 import Error
-import mysql.connector
 import time
 import settings
 import math
 import sys
+from sqlalchemy import create_engine
+from sqlalchemy import text
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
 class Db:
+  engine = None
   conn = None
   cur = None
   
-  def __init__(self,db_file):
+  def __init__(self):
     """ create a database connection to a SQLite database """
-    try:
-      #self.conn = sqlite3.connect(db_file, isolation_level=None)
-      self.conn = mysql.connector.connect(user=settings.dbUser,password=settings.dbPassword, database=settings.dbName,host=settings.dbHost, buffered=True)
-      self.conn.autocommit = True
-      self.cur = self.conn.cursor()
-    except Error as e:
-      eprint(e)
-    finally:
-      if not self.conn:
-        self.conn.close()
-        eprint('Closing db')
+    url = "mariadb+mariadbconnector://" + settings.dbUser + ":" + settings.dbPassword + "@" + settings.dbHost + "/" + settings.dbName #?charset=utf8mb4'
 
-  def __del__(self):
-    self.cur.close()
-    self.conn.close()
+    self.engine = create_engine(url, echo=True)
 
   def query(self,q):
-    self.cur.execute(q)
-    #return self.cur.fetchmany(24 * 60 * 60)
-    return self.cur
+    res = self.engine.execute(text(q))
+    return res
 
   def getLog(self,sensorName):
     self.cur.execute("SELECT time,CAST(value AS INT) FROM `log` WHERE `Id`=(select `Id` from `status` where `status`.`name`='" + str(sensorName) + "') order by time desc")
@@ -46,32 +33,28 @@ class Db:
     if not sensorsData:
       return
     for sensorId,value in sensorsData.items():
-      self.cur.execute("SELECT count(sensorId) from `openSolar`.`log` where `sensorId`='" + str(sensorId) + "'")
-      res = self.cur.fetchone()
-      if int(res[0]) == 0: # If no entries in db
-        self.query("INSERT INTO log (`sensorId`,`time`,`value`) VALUES ('" + str(sensorId) + "','" + str(int(time.time())) + "','" + str(value) + "')")
-        break
-      # Derivative compression
-      self.cur.execute("SELECT value,time from `openSolar`.`log` where `sensorId`='" + str(sensorId) + "' order by time desc limit 1")
-      res = self.cur.fetchone()
-      if res is not None:
-        valueDB = float(res[0]) 
-        epochTimeDB = int(res[1])
-        #eprint(str(sensorId))
-        #eprint(str(int(time.time()) - 120) + " " + str(epochTimeDB))
-        #eprint(int(time.time()) - 120 > epochTimeDB)
-        if (not math.isclose(value, valueDB, abs_tol=1)) or (int(time.time() - 600) > epochTimeDB): # if temp change is bigger than one degree log temp.
-          self.query("INSERT INTO log (`sensorId`,`time`,`value`) VALUES ('" + str(sensorId) + "','" + str(int(time.time())) + "','" + str(value) + "')")
+      if sensorId[0:1] == 't':
+        res = self.query("SELECT value,time from `openSolar`.`log` where `sensorId`='" + str(sensorId) + "' order by time desc limit 1").first()
+        if res[0] is not None:
+          valueDB = float(res[0]) 
+          epochTimeDB = int(res[1])
+          print(str(sensorId))
+          print(str(int(time.time()) - 120) + " " + str(epochTimeDB))
+          print(int(time.time()) - 120 > epochTimeDB)
+          #if int(valueDB) > 140: # Don't log temperatures above this. This must be an error.
+          #    continue
+          if (not math.isclose(value, valueDB, abs_tol=1)) or (int(time.time() - 600) > epochTimeDB): # if temp change is bigger than one degree log temp.
+            self.query("INSERT INTO log (`sensorId`,`time`,`value`) VALUES ('" + str(sensorId) + "','" + str(int(time.time())) + "','" + str(value) + "')")
    
   def statusUPDATE(self,sensorsData,field):
     for sensorId,value in sensorsData.items():
-      self.query("UPDATE status SET value=" + str(value) + ",time=" + str(int(time.time())) + " WHERE `" + field + "`='" + sensorId + "'" )
+      self.query("UPDATE status SET value=" + str(value) + " WHERE `" + field + "`='" + sensorId + "'" )
 
   def getStatusValueViaName(self,name):
-    self.cur.execute("SELECT value FROM status WHERE `name`='" + name + "'")
+    self.query("SELECT value FROM status WHERE `name`='" + name + "'")
     return str(self.cur.fetchone()[0])
 
   def getStatusIntValueViaName(self,name):
-    self.cur.execute("SELECT CAST(value AS int) FROM status WHERE `name`='" + name + "'")
+    self.query("SELECT CAST(value AS int) FROM status WHERE `name`='" + name + "'")
     return str(self.cur.fetchone()[0])
 

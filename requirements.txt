@@ -3,7 +3,7 @@ numpy==1.17.4
 AppKit==0.2.8
 Cython==0.29.15
 Image==1.5.28
-Pillow==7.0.0
+Pillow==10.0.1
 PyInstaller==3.6
 argcomplete==1.11.1
 brotli==1.0.7

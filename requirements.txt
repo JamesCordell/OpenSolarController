@@ -29,7 +29,7 @@ pyobjus==1.1.0
 pytest==5.3.5
 select_backport==0.2
 Sphinx==2.4.1
-Twisted==19.10.0
+Twisted==23.8.0
 usercustomize==1.0.0
 win32gui==221.6
 wincertstore==0.2

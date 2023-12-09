@@ -4,7 +4,7 @@ AppKit==0.2.8
 Cython==0.29.15
 Image==1.5.28
 Pillow==7.0.0
-PyInstaller==3.6
+PyInstaller==5.13.1
 argcomplete==1.11.1
 brotli==1.0.7
 ddt==1.2.2

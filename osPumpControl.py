@@ -63,25 +63,26 @@ def main():
       # Special case were the device shuts down if over load parameters are reached.
       if str(fullData['protect']) == '1': 
         print("Overload protect set to 1 check s-ovp s-ocp s-opp")
-        # rowPrev['on'] = float(0) # uncomment this to clear protect and try again.
+        #rowPrev['on'] = float(0) # uncomment this to clear protect and try again.
         continue
 
       # Read and writeable data
-      ret = db.query("SELECT * FROM status WHERE sensorId IN('u-set','i-set','lock','on','s-ovp','s-ocp','s-opp')") 
+      ret = db.query("SELECT sensorId,value FROM status WHERE sensorId IN('u-set','i-set','lock','on','s-ovp','s-ocp','s-opp')") 
       for row in ret:
         try:
-          if float(row['value']) != float(rowPrev[row['sensorId']]):
-            dps.setById(row['sensorId'],float(row['value']))
-          rowPrev[row['sensorId']] = float(row['value'])
+          if float(row.value) != float(rowPrev[row.sensorId]):
+            dps.setById(row.sensorId,float(row.value))
+          rowPrev[row.sensorId] = float(row.value)
         except KeyError:
-          rowPrev[row['sensorId']] = float(row['value'])
+          rowPrev[row.sensorId] = float(row.value)
           #dps.setById(row['sensorId'],float(row['value'])) # The device is crontrolled from the database
 
-      ret = db.query("SELECT * FROM status WHERE sensorId IN('control0-loop-onoff','on','control1-off2onThress','control1-on2offThress','t1','t2','t3','t4')") 
+      ret = db.query("SELECT sensorId,value FROM status WHERE sensorId IN('control0-loop-onoff','on','control1-off2onThress','control1-on2offThress','t1','t2','t3','t4')") 
 
       control = dict()
       for row in ret:
-          control[row['sensorId']] = float(row['value'])
+          print(row.value,row.sensorId)
+          control[row.sensorId] = float(row.value)
 
       if control['control0-loop-onoff']:
         if control['on'] == 0:

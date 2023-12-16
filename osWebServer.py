@@ -25,7 +25,7 @@ app.title = 'openSolar Controller data'
               Input('interval-component-status', 'n_intervals'))
 def getStatus(data):
 
-    url = 'mariadb+mariadbconnector://openSolar:openSolar@ubuntu.local/openSolar' #?charset=utf8mb4'
+    url = 'mariadb+mariadbconnector://openSolar:openSolar@localhost/openSolar' #?charset=utf8mb4'
 
     engine = create_engine(url, echo=True)
     connection = engine.raw_connection()
@@ -60,12 +60,12 @@ def getStatus(data):
 
 @app.callback(
               Output('computed-table-editable','data'),
-              Input('interval-component-editable', 'n_intervals'),
+              #Input('interval-component-editable', 'n_intervals'),
               Input('computed-table-editable', 'data_timestamp'),
               State('computed-table-editable', 'data'))
-def getEditable(timestamp, data_timestamp, rows):
+def getEditable( data_timestamp, rows):
 
-    url = 'mariadb+mariadbconnector://openSolar:openSolar@ubuntu.local/openSolar' #?charset=utf8mb4'
+    url = 'mariadb+mariadbconnector://openSolar:openSolar@localhost/openSolar' #?charset=utf8mb4'
     engine = create_engine(url, echo=True)
     connection = engine.raw_connection()
     cursor = connection.cursor()
@@ -76,21 +76,20 @@ def getEditable(timestamp, data_timestamp, rows):
     dataFromDb = pd.DataFrame(data)
     dataFromWeb = pd.DataFrame(rows)
     webUpdateTime = None
-    print(rows)
     if rows is not None:
       if isinstance(data_timestamp, numbers.Number): 
         webUpdateTime = int(data_timestamp / 1000)
         df = dataFromWeb[['sensorId','value']].join(dataFromDb[['sensorId','value','time']],lsuffix='_web',rsuffix='_db',how='left')
         df = df[df['value_web'] != df['value_db']]
         df['value_newest'] = np.where( df['time'] > webUpdateTime, df['value_db'], df['value_web'] )
-        print(timestamp)
-        print(df)
         if data_timestamp is not None:
           for i,r in df.iterrows():
             try:
-              sql = "UPDATE status SET value= %s,time=%s WHERE sensorId=%s"
+              sql = "UPDATE status SET value=%s,time=%s WHERE sensorId=%s"
               val = ( r['value_newest'] ,webUpdateTime ,r['sensorId_web'] )
-              #data[r['sensorId_web']] = r['value_newest']
+              for row in data:
+                if row['sensorId'] == r['sensorId_web']:
+                  row.update( { 'value': r['value_newest'] })
               cursor.execute(sql, val)
             except:
               row['output-data'] = 'NA'
@@ -179,12 +178,12 @@ app.layout = html.Div([
                  'minWidth': '20%',
             }
         )
-        ,
-        dcc.Interval(
-            id='interval-component-editable',
-            interval=5*1000, # in milliseconds
-            n_intervals=0
-        ) 
+        #,
+        #dcc.Interval(
+        #    id='interval-component-editable',
+        #    interval=5*1000, # in milliseconds
+        #    n_intervals=0
+        #) 
     ]
     ,style={'width': '44%', 'display': 'inline-block', 'margin-left': '5%'}),
 ])
@@ -195,7 +194,7 @@ app.layout = html.Div([
               Input('interval-component', 'n_intervals'))
 def update_graph_live(cnxn):
 
-    url = 'mariadb+mariadbconnector://openSolar:openSolar@ubuntu.local/openSolar' #?charset=utf8mb4'
+    url = 'mariadb+mariadbconnector://openSolar:openSolar@localhost/openSolar' #?charset=utf8mb4'
 
     engine = create_engine(url, echo=True)
     connection = engine.raw_connection()
@@ -247,8 +246,7 @@ def update_graph_live(cnxn):
         line=dict(color='#00DD00', width=1),
         name='control0-off2onThress',
         mode='lines'))
-
-    y_on2off = [int(control1on2offThress['value'][0]) + int(t1['value'][0]) , int(control1on2offThress['value'][0]) + int(t1['value'][0])]
+    y_on2off = [int(control1on2offThress['value'][0]) + int(t1['value'].iloc[-1]) , int(control1on2offThress['value'][0]) + int(t1['value'].iloc[-1])]
     figure.add_trace(go.Scatter(
         x=[control1on2offThress['time'][0] , time.strftime("%Y-%m-%d %H:%M:%S.000", time.localtime()) ],
         y=y_on2off,

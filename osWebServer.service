@@ -1,0 +1,13 @@
+[Unit]
+Description=Web service
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/OpenSolarController/
+ExecStart=/home/pi/OpenSolarController/.venv/bin/python3 osWebServer.py
+
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target

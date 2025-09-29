@@ -50,7 +50,7 @@ def main():
     killer = GracefulKiller()
     while not killer.kill_now:
       fullData = dps.getFullData()
-      print(fullData)
+      #print(fullData)
 
       # Read only data
       db.query("UPDATE status SET value=" + str(fullData['u-out']) + " WHERE sensorId='u-out'")
@@ -81,7 +81,7 @@ def main():
 
       control = dict()
       for row in ret:
-          print(row.value,row.sensorId)
+          #print(row.value,row.sensorId)
           control[row.sensorId] = float(row.value)
 
       if control['control0-loop-onoff']:
@@ -89,8 +89,8 @@ def main():
           if control['t4'] > control['control1-off2onThress']:
             db.query("UPDATE openSolar.status SET value=1 WHERE sensorId ='on' ")
         else:
-          if control['t4'] < control['control1-on2offThress'] + control['t1']:
-            db.query("UPDATE openSolar.status SET value=0 WHERE sensorId ='on' ")
+            if control['t4'] < control['control1-on2offThress'] + control['t2']:
+              db.query("UPDATE openSolar.status SET value=0 WHERE sensorId ='on' ")
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,10 @@
 timeZone             = "Europe/London"
 arduinoSerialDev0    = '/dev/ttyUSB0'
 arduinoSerialDev1    = '/dev/ttyUSB1'
-dpsSerialDev0        = '/dev/ttyUSB2'
+#arduinoSerialDev0    = '/dev/serial/by-path/platform-5311400.usb-usb-0:1:1.0-port0'
+#arduinoSerialDev1    = '/dev/serial/by-path/platform-xhci-hcd.1.auto-usb-0:1:1.0-port0'
+dpsSerialDev0        = '/dev/serial/by-path/platform-5101400.usb-usb-0:1:1.0-port0'
+ds18b20_1            = '00000036061c'
 ifName               = 'eth0'
 ifNameFallback       = 'wlan0'
 dbFile               = 'OpenSolar.db'

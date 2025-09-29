@@ -19,7 +19,7 @@ class Db:
     """ create a database connection to a SQLite database """
     url = "mariadb+mariadbconnector://" + settings.dbUser + ":" + settings.dbPassword + "@" + settings.dbHost + "/" + settings.dbName #?charset=utf8mb4'
 
-    self.engine = create_engine(url, echo=True)
+    self.engine = create_engine(url, echo=False)
     self.conn = self.engine.connect()
 
   def query(self,q):
@@ -40,9 +40,9 @@ class Db:
         if res is not None:
           valueDB = float(res[0]) 
           epochTimeDB = int(res[1])
-          print(str(sensorId))
-          print(str(int(time.time()) - 120) + " " + str(epochTimeDB))
-          print(int(time.time()) - 120 > epochTimeDB)
+          #print(str(sensorId))
+          #print(str(int(time.time()) - 120) + " " + str(epochTimeDB))
+          #print(int(time.time()) - 120 > epochTimeDB)
           #if int(valueDB) > 140: # Don't log temperatures above this. This must be an error.
           #    continue
           if (not math.isclose(value, valueDB, abs_tol=1)) or (int(time.time() - 600) > epochTimeDB): # if temp change is bigger than one degree log temp.
@@ -52,7 +52,8 @@ class Db:
 
   def statusUPDATE(self,sensorsData,field):
     for sensorId,value in sensorsData.items():
-      self.query("UPDATE status SET value=" + str(value) + " WHERE `" + field + "`='" + sensorId + "'" )
+      #print(time)
+      self.query("UPDATE status SET value=" + str(value) + ",time=now() WHERE `" + field + "`='" + sensorId + "'" )
 
   def getStatusValueViaName(self,name):
     self.query("SELECT value FROM status WHERE `name`='" + name + "'")

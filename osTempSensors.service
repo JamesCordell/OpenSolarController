@@ -2,9 +2,9 @@
 Description=Temperature sensors service
 
 [Service]
-User=pi
-WorkingDirectory=/home/pi/OpenSolarController/
-ExecStart=/home/pi/OpenSolarController/.venv/bin/python3 osTempSensors.py
+User=opensolar
+WorkingDirectory=/home/opensolar/OpenSolarController/
+ExecStart=/home/opensolar/OpenSolarController/.venv/bin/python3 osTempSensors.py
 
 Restart=on-failure
 RestartSec=10s

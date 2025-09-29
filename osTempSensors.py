@@ -13,6 +13,8 @@ import statistics
 import settings
 import numbers
 from openSolarDb import Db
+from w1thermsensor import W1ThermSensor, Sensor
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -27,7 +29,10 @@ def getMAX(sensorsData,dev):
   except AttributeError:
       eprint("Error writing to Arduino.")
       return
-  dev.readline()
+  try:
+    dev.readline()
+  except serial.serialutil.SerialException:
+    eprint("serial error")
   jsonStr = dev.readline().decode("utf-8")
   if jsonStr: # if data
     try:
@@ -52,7 +57,7 @@ def initSerial(serialNum):
         stopbits=serial.STOPBITS_ONE,
         timeout=1)
     except:
-        eprint("Serial Error: " + str(sys.exc_info()[0]))
+        eprint("Serial Error dev0: " + str(sys.exc_info()[0]))
   if serialNum == 1:
     try:
         return serial.Serial(port=settings.arduinoSerialDev1,
@@ -62,24 +67,26 @@ def initSerial(serialNum):
         stopbits=serial.STOPBITS_ONE,
         timeout=1)
     except:
-        eprint("Serial Error: " + str(sys.exc_info()[0]))
+        eprint("Serial Error: Dev1" + str(sys.exc_info()[0]))
 
 if __name__ == '__main__':
     db = Db()
-    dev = None
     sensorsData0 = dict()
     sensorsData1 = dict()
+    sensor = W1ThermSensor(sensor_type=Sensor.DS18B20, sensor_id=settings.ds18b20_1)
     while True:
-      dev0 = initSerial(0)
+      #dev0 = initSerial(0)
+      #if dev0 is not None:
+        #getMAX(sensorsData0,dev0)
       dev1 = initSerial(1)
-      if dev0 is not None:
-        getMAX(sensorsData0,dev0)
+      if dev1 is not None:
         getMAX(sensorsData1,dev1)
+        sensorsData0['t2'] = float(truncate(sensor.get_temperature()))
       else:
-        dev0 = initSerial(0)
+        #dev0 = initSerial(0)
         dev1 = initSerial(1)
         
-      print(sensorsData0)
+      #print(sensorsData0)
       print(sensorsData1)
       db.logINSERT(sensorsData0)
       db.logINSERT(sensorsData1)

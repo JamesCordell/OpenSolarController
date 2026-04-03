@@ -26,6 +26,8 @@ def main():
     # example data {'u-set': 8.8, 'i-set': 1.0, 'u-out': 8.72, 'i-out': 0.428, 'power': 3.73, 'u-in': 15.11, 'lock': 0, 'protect': 0, 'cvcc': 1, 'on': 1, 'b-led': 4, 'model': 5005, 'fw-version': '1.4', 's-ovp': 51.0, 's-ocp': 5.2, 's-opp': 2652}
     #Read only data
     fullData = dps.getFullData()
+    #print(fullData)
+    #exit()
     db.query("INSERT IGNORE INTO status (`sensorId`,`value`) VALUE ( 'u-out'," + str(fullData['u-out']) + ")")
     db.query("INSERT IGNORE INTO status (`sensorId`,`value`) VALUE ( 'i-out'," + str(fullData['i-out']) + ")")
     db.query("INSERT IGNORE INTO status (`sensorId`,`value`) VALUE ( 'power'," + str(fullData['power']) + ")")
